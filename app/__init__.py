@@ -1,9 +1,10 @@
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from flask import Flask
 from flask_login import LoginManager
 from flask_pymongo import PyMongo
-import os
-from pathlib import Path
-from dotenv import load_dotenv
 
 # Load .env from parent directory (override existing env vars)
 basedir = Path(__file__).parent.parent
@@ -24,6 +25,7 @@ login_manager.login_view = 'auth.login'
 
 from app.models import User
 
+
 @login_manager.user_loader
 def load_user(user_id):
     from bson.objectid import ObjectId
@@ -35,6 +37,7 @@ def load_user(user_id):
 from app.blueprints.auth import auth_bp
 from app.blueprints.customer import customer_bp
 from app.blueprints.vendor import vendor_bp
+
 app.register_blueprint(auth_bp)
 app.register_blueprint(customer_bp)
 app.register_blueprint(vendor_bp)
