@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center mt-5">
+    
+    {% if current_user.is_authenticated %}
+    <div class="mt-5">
+        <h1 class="display-4">Hello, {{ current_user.username }}</h1>
+        {% if current_user.user_type == 'vendor' %}
+            <a href="{{ url_for('vendor.dashboard') }}" class="btn btn-primary btn-lg mt-3">Go to Dashboard</a>
+        {% else %}
+            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-primary btn-lg mt-3">Go to Dashboard</a>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="mt-4">
+            <h1 class="display-4">Welcome to [APP NAME]!</h1>
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg mt-3 me-2">Sign up</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg mt-3">Login</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

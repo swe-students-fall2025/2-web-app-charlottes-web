@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Create Group{% endblock %}
+
+{% block content %}
+<div>
+    <h1 class="mb-4">Create New Group</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('customer.create_group') }}">
+                <div class="mb-3">
+                    <label for="group_name" class="form-label">Group Name</label>
+                    <input
+                        type="text"
+                        class="form-control form-control-lg"
+                        id="group_name"
+                        name="group_name"
+                        placeholder="Enter group name"
+                        required
+                        autofocus>
+                    <div class="form-text">You can use this group multiple times!</div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">Create Group</button>
+                    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
