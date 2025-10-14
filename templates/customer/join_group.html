@@ -8,7 +8,7 @@
     
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('join_group') }}">
+            <form method="POST" action="{{ url_for('customer.join_group') }}">
                 <div class="mb-3">
                     <label for="group_id" class="form-label">Group ID</label>
                     <input 
@@ -24,7 +24,7 @@
                 
                 <div class="d-grid gap-2">
                     <button type="submit" class="btn btn-primary btn-lg">Join Group</button>
-                    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>

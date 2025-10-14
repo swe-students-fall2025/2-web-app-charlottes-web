@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="vendor-dashboard">
+    <h1 class="mb-4">Dashboard</h1>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Active Bills</h5>
+                    <h2 class="card-text">{{ active_bills|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Bills -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Active Bills</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_bills %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Bill ID</th>
+                                        <th>Table</th>
+                                        <th>Group</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bill in active_bills %}
+                                    <tr>
+                                        <td>#{{ bill._id|string|truncate(8, True, '') }}</td>
+                                        <td>{{ bill.table_number }}</td>
+                                        <td>
+                                            {% if bill.group_id %}
+                                                Group #{{ bill.group_id|string|truncate(8, True, '') }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'warning' if bill.status == 'pending' else 'info' }}">
+                                                {{ bill.status|capitalize }}
+                                            </span>
+                                        </td>
+                                        <td>${{ "%.2f"|format(bill.total_amount) }}</td>
+                                        <td>
+                                            <a href="{{ url_for('bill_detail', bill_id=bill._id) }}" class="btn btn-sm btn-primary">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

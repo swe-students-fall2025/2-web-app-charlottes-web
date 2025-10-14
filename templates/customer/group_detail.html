@@ -59,9 +59,9 @@
                 
                 <!-- Actions -->
                 <div class="d-flex gap-2">
-                    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
 
-                    <form method="POST" action="{{ url_for('leave_group', group_id=group._id) }}"
+                    <form method="POST" action="{{ url_for('customer.leave_group', group_id=group._id) }}"
                           onsubmit="return confirm('Are you sure you want to leave this group?');" class="ms-auto">
                         <button type="submit" class="btn btn-danger">Leave Group</button>
                     </form>

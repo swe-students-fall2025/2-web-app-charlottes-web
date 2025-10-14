@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}My Groups{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
 <div class="customer-dashboard">
@@ -14,7 +14,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
                         <h3 class="card-title h5">{{ group.name }}</h3>
-                        <a href="{{ url_for('group_detail', group_id=group._id) }}" class="btn btn-sm btn-primary">View Details</a>
+                        <a href="{{ url_for('customer.group_detail', group_id=group._id) }}" class="btn btn-sm btn-primary">View Details</a>
                     </div>
                     
                     <p class="card-text text-muted mb-2">
@@ -24,31 +24,10 @@
                         <span class="badge {{ 'bg-success' if group.active else 'bg-secondary' }}">
                             {{ 'Active Group' if group.active else 'Inactive Group' }}
                         </span>
-                        <span class="badge {{ 'bg-secondary' if group else 'bg-warning' }}">
+                        <span class="badge {{ 'bg-warning' if group.active_bill_id else 'bg-success' }}">
                             {{ 'Has active bill' if group.active_bill_id else 'No active bill' }}
                         </span>
                     </p>
-                    
-                    <!-- Group ID with copy button -->
-                    <!--
-                    <div class="mb-2">
-                        <small class="text-muted d-block">Group ID:</small>
-                        <div class="input-group input-group-sm">
-                            <input
-                                type="text"
-                                class="form-control"
-                                value="{{ group._id }}"
-                                id="group-id-{{ loop.index }}"
-                                readonly>
-                            <button
-                                class="btn btn-outline-secondary"
-                                type="button"
-                                onclick="copyGroupId('group-id-{{ loop.index }}')">
-                                Copy
-                            </button>
-                        </div>
-                    </div>
-                    -->
                 </div>
             </div>
             {% endfor %}
@@ -61,25 +40,9 @@
 
     <!-- Action buttons with Bootstrap -->
     <div class="d-grid gap-2 mb-4">
-        <a href="{{ url_for('create_group') }}" class="btn btn-primary">Create New Group</a>
-        <a href="{{ url_for('join_group') }}" class="btn btn-outline-secondary">Join Existing Group</a>
+        <a href="{{ url_for('customer.create_group') }}" class="btn btn-primary">Create New Group</a>
+        <a href="{{ url_for('customer.join_group') }}" class="btn btn-outline-secondary">Join Existing Group</a>
     </div>
 
 </div>
-
-<!-- JavaScript for copy functionality -->
-<script>
-function copyGroupId(elementId) {
-    var copyText = document.getElementById(elementId);
-    copyText.select();
-    copyText.setSelectionRange(0, 99999); // For mobile devices
-    
-    navigator.clipboard.writeText(copyText.value).then(function() {
-        // Show temporary success message
-        alert('Group ID copied to clipboard!');
-    }, function(err) {
-        alert('Failed to copy: ' + err);
-    });
-}
-</script>
 {% endblock %}

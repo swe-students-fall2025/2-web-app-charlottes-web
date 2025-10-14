@@ -20,7 +20,7 @@ mongo = PyMongo(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'auth.login'
 
 from app.models import User
 
@@ -31,5 +31,12 @@ def load_user(user_id):
     if user_data:
         return User(user_data)
     return None
+
+from app.blueprints.auth import auth_bp
+from app.blueprints.customer import customer_bp
+from app.blueprints.vendor import vendor_bp
+app.register_blueprint(auth_bp)
+app.register_blueprint(customer_bp)
+app.register_blueprint(vendor_bp)
 
 from app import routes
