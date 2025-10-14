@@ -70,7 +70,7 @@ class Bill:
     def __init__(self, bill_data):
         self.id = str(bill_data.get('_id', ''))
         self.vendor_id = str(bill_data.get('vendor_id', ''))
-        self.group_id = str(bill_data.get('group_id', ''))
+        # self.group_id = str(bill_data.get('group_id', ''))
         self.table_number = str(bill_data.get('table_number', ''))
         self.items = bill_data.get('items', [])
         self.total_amount = bill_data.get('total_amount', 0.0)
