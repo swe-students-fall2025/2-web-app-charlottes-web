@@ -1,7 +1,9 @@
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
-from bson.objectid import ObjectId
 from datetime import datetime
+
+from bson.objectid import ObjectId
+from flask_login import UserMixin
+from werkzeug.security import check_password_hash, generate_password_hash
+
 
 class User(UserMixin):
     '''
@@ -74,8 +76,8 @@ class Bill:
         self.total_amount = bill_data.get('total_amount', 0.0)
         self.status = bill_data.get('status', 'pending')
         self.session_code = bill_data.get('session_code', '')
-        self.estimated_total = bill_data.get('estimated_total', 0.0)
-        self.final_total = bill_data.get('final_total', 0.0)
+        # self.estimated_total = bill_data.get('estimated_total', 0.0)
+        # self.final_total = bill_data.get('final_total', 0.0)
         # self.created_at = bill_data.get('created_at', datetime.utcnow())
         # self.updated_at = bill_data.get('updated_at', datetime.utcnow())
 
