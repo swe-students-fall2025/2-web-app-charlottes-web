@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}My Groups{% endblock %}
+
+{% block content %}
+<div class="customer-dashboard">
+    <h1 class="mb-4">My Groups</h1>
+    
+    <!-- Action buttons with Bootstrap -->
+    <div class="d-grid gap-2 mb-4">
+        <a href="{{ url_for('create_group') }}" class="btn btn-primary btn-lg">Create New Group</a>
+        <a href="{{ url_for('join_group') }}" class="btn btn-outline-secondary btn-lg">Join Existing Group</a>
+    </div>
+    
+    <!-- Groups list -->
+    <div class="groups-container">
+        {% if groups %}
+            <h2 class="h5 mb-3">Your Groups</h2>
+            {% for group in groups %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h3 class="card-title h5">{{ group.name }}</h3>
+                    
+                    <!-- Group ID with copy button -->
+                    <div class="mb-2">
+                        <small class="text-muted d-block">Group ID:</small>
+                        <div class="input-group input-group-sm">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                value="{{ group._id }}" 
+                                id="group-id-{{ loop.index }}"
+                                readonly>
+                            <button 
+                                class="btn btn-outline-secondary" 
+                                type="button"
+                                onclick="copyGroupId('group-id-{{ loop.index }}')">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <p class="card-text text-muted mb-2">
+                        <small>Members: {{ group.members|length }}</small>
+                    </p>
+                    <p class="card-text mb-3">
+                        <span class="badge {{ 'bg-success' if group.active else 'bg-secondary' }}">
+                            {{ 'Active' if group.active else 'Inactive' }}
+                        </span>
+                    </p>
+                    
+                    {% if group.active_bill_id %}
+                        <span class="badge bg-warning">Has active bill</span>
+                    {% else %}
+                        <span class="badge bg-secondary">No active bill</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info text-center mt-5" role="alert">
+                <p class="mb-0">You haven't joined any groups yet. Create or join a group to get started!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- JavaScript for copy functionality -->
+<script>
+function copyGroupId(elementId) {
+    var copyText = document.getElementById(elementId);
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); // For mobile devices
+    
+    navigator.clipboard.writeText(copyText.value).then(function() {
+        // Show temporary success message
+        alert('Group ID copied to clipboard!');
+    }, function(err) {
+        alert('Failed to copy: ' + err);
+    });
+}
+</script>
+{% endblock %}

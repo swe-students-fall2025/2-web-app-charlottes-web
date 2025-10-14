@@ -22,9 +22,27 @@ The app simplifies group payments by enabling vendors to process one shared bill
 
 ## Steps necessary to run the software
 
-See instructions. Delete this line and place instructions to download, configure, and run the software here.
+1. Create a virtual environment and install all dependencies listed in `requirements.txt` by running the following command in terminal.
+
+    ```bash
+    python -m venv .venv
+    pip install -r requirements.txt
+    ```
+
+2. Activate the virtual environment by running the following command in terminal.
+
+    ```bash
+    source .venv/bin/activate
+    ```
+
+3. Run the Flask development server by running the following command in terminal.
+
+    ```bash
+    flask run
+    ```
 
 ## Task boards
 
 [Link to Sprint 1 Task board](https://github.com/orgs/swe-students-fall2025/projects/24)
+
 [Link to Sprint 2 Task board](https://github.com/orgs/swe-students-fall2025/projects/25)

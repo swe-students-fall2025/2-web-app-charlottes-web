@@ -5,6 +5,7 @@ click==8.3.0
 dnspython==2.8.0
 Flask==3.1.2
 Flask-Login==0.6.3
+Flask-PyMongo==3.0.1
 gitcommitlogger==1.2.5
 idna==3.6
 itsdangerous==2.2.0
