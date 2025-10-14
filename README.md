@@ -28,11 +28,10 @@ The app simplifies group payments by enabling vendors to process one shared bill
     git clone https://github.com/swe-students-fall2025/2-web-app-charlottes-web.git    
     ```
 
-2. Create a virtual environment and install all dependencies listed in `requirements.txt` by running the following command in terminal.
+2. Create a virtual environment. Make sure to use Python version 3.10 or above.
 
     ```bash
     python -m venv .venv
-    pip install -r requirements.txt
     ```
 
 3. Activate the virtual environment by running the following command in terminal.
@@ -41,7 +40,12 @@ The app simplifies group payments by enabling vendors to process one shared bill
     source .venv/bin/activate
     ```
 
-4. Run the Flask development server by running the following command in terminal.
+4. Install all required dependencies listed in `requirements.txt`.
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+5. Run the Flask development server by running the following command in terminal.
 
     ```bash
     flask run
