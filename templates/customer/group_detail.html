@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>{{ group.name }}</h3>
+                <span class="badge bg-{{ 'success' if group.active else 'danger' }}">
+                    {{ 'Active' if group.active else 'Inactive' }}
+                </span>
+            </div>
+            <div class="card-body">
+                <!-- Group ID for sharing -->
+                <div class="mb-4">
+                    <h5>Group ID</h5>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="groupId" value="{{ group._id }}" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyGroupId()">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Active Bill Status -->
+                <div class="mb-4">
+                    <h5>Active Bill</h5>
+                    {% if active_bill %}
+                        <div class="alert alert-info">
+                            <strong>Bill #{{ active_bill._id }}</strong><br>
+                            Table: {{ active_bill.table_number }}<br>
+                            Status: <span class="badge bg-warning">{{ active_bill.status }}</span><br>
+                            Total: ${{ "%.2f"|format(active_bill.total_amount) }}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No active bill at the moment.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Members List -->
+                <div class="mb-4">
+                    <h5>Members ({{ members|length }})</h5>
+                    <div class="list-group">
+                        {% for member in members %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ member.username }}</strong>
+                                </div>
+                                <div>
+                                    {% if member._id|string == group.creator_id %}
+                                        <span class="badge bg-primary ms-1">Creator</span>
+                                    {% endif %}
+                                    {% if member._id|string == current_user.id %}
+                                        <span class="badge bg-secondary ms-1">You</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+
+                    <form method="POST" action="{{ url_for('leave_group', group_id=group._id) }}"
+                          onsubmit="return confirm('Are you sure you want to leave this group?');" class="ms-auto">
+                        <button type="submit" class="btn btn-danger">Leave Group</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if is_creator %}
+                        <a href="#" class="btn btn-outline-primary">
+                            Manage members
+                        </a>
+                    {% else %}
+                        <p class="d-flex align-items-center">
+                            No available actions
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyGroupId() {
+    const groupIdInput = document.getElementById('groupId');
+    groupIdInput.select();
+    groupIdInput.setSelectionRange(0, 99999); // For mobile devices
+
+    navigator.clipboard.writeText(groupIdInput.value).then(function() {
+        // Show success message
+        alert('Group ID copied to clipboard!');
+    }, function(err) {
+        alert('Failed to copy Group ID');
+    });
+}
+</script>
+
+<!-- Bootstrap Icons (add this to base.html if not already included) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+{% endblock %}
