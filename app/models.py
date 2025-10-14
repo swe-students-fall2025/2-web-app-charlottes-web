@@ -13,7 +13,7 @@ class User(UserMixin):
         self.email = user_data.get('email', '')
         self.password_hash = user_data.get('password_hash', '')
         self.user_type = user_data.get('user_type', 'customer')
-        self.phone = user_data.get('phone', '')
+        # self.phone = user_data.get('phone', '')
         self.payment_method = user_data.get('payment_method', {})  # for customers
         self.vendor_name = user_data.get('vendor_name', '')  # for vendors
         # self.created_at = user_data.get('created_at', datetime.utcnow())
@@ -37,7 +37,7 @@ class User(UserMixin):
             'email': email,
             'password_hash': generate_password_hash(password),
             'user_type': user_type,
-            'phone': kwargs.get('phone', ''),
+            # 'phone': kwargs.get('phone', ''),
             # 'created_at': datetime.utcnow()
         }
         
