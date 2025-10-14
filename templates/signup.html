@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Sign Up</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="user_type" class="form-label">I am a...</label>
+                        <select class="form-select" id="user_type" name="user_type" required>
+                            <option value="customer" selected>Customer</option>
+                            <option value="vendor">Vendor</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="vendorNameField" style="display: none;">
+                        <label for="vendor_name" class="form-label">Business Name</label>
+                        <input type="text" class="form-control" id="vendor_name" name="vendor_name">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+                </form>
+                <hr>
+                <p class="text-center mb-0">
+                    Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show/hide vendor name field based on user type
+    document.getElementById('user_type').addEventListener('change', function() {
+        const vendorNameField = document.getElementById('vendorNameField');
+        const vendorNameInput = document.getElementById('vendor_name');
+
+        if (this.value === 'vendor') {
+            vendorNameField.style.display = 'block';
+            vendorNameInput.required = true;
+        } else {
+            vendorNameField.style.display = 'none';
+            vendorNameInput.required = false;
+        }
+    });
+</script>
+{% endblock %}

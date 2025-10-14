@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Join Group{% endblock %}
+
+{% block content %}
+<div class="join-group-page">
+    <h1 class="mb-4">Join Existing Group</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('customer.join_group') }}">
+                <div class="mb-3">
+                    <label for="group_id" class="form-label">Group ID</label>
+                    <input 
+                        type="text" 
+                        class="form-control form-control-lg" 
+                        id="group_id" 
+                        name="group_id" 
+                        placeholder="Paste the Group ID here"
+                        required
+                        autofocus>
+                    <div class="form-text">Ask your friend to share the Group ID from their dashboard</div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">Join Group</button>
+                    <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
