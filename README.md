@@ -22,20 +22,26 @@ The app simplifies group payments by enabling vendors to process one shared bill
 
 ## Steps necessary to run the software
 
-1. Create a virtual environment and install all dependencies listed in `requirements.txt` by running the following command in terminal.
+1. Clone this repository by running the following command in terminal.
+
+    ```bash
+    git clone https://github.com/swe-students-fall2025/2-web-app-charlottes-web.git    
+    ```
+
+2. Create a virtual environment and install all dependencies listed in `requirements.txt` by running the following command in terminal.
 
     ```bash
     python -m venv .venv
     pip install -r requirements.txt
     ```
 
-2. Activate the virtual environment by running the following command in terminal.
+3. Activate the virtual environment by running the following command in terminal.
 
     ```bash
     source .venv/bin/activate
     ```
 
-3. Run the Flask development server by running the following command in terminal.
+4. Run the Flask development server by running the following command in terminal.
 
     ```bash
     flask run
