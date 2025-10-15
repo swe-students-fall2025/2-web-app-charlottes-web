@@ -2,7 +2,7 @@ from bson.objectid import ObjectId
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from app import mongo
+from app import TAX_RATE, mongo
 
 vendor_bp = Blueprint('vendor', __name__, url_prefix='/vendor')
 
@@ -26,10 +26,10 @@ def dashboard():
     )
 
     # Get completed bills count
-    completed_count = mongo.db.bills.count_documents({
-        'vendor_id': current_user.id,
-        'status': 'completed'
-    })
+    # completed_count = mongo.db.bills.count_documents({
+    #     'vendor_id': current_user.id,
+    #     'status': 'completed'
+    # })
 
     # Get menu items count
     menu_items_count = mongo.db.menu_items.count_documents(
@@ -39,8 +39,9 @@ def dashboard():
     return render_template('vendor/dashboard.html',
                            title='Vendor Dashboard',
                            active_bills=active_bills,
-                           completed_count=completed_count,
-                           menu_items_count=menu_items_count)
+                           # completed_count=completed_count,
+                           menu_items_count=menu_items_count,
+                           tax=TAX_RATE)
 
 
 @vendor_bp.route('/menu')
