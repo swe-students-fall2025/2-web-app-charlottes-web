@@ -44,3 +44,5 @@ app.register_blueprint(customer_bill_bp)
 app.register_blueprint(vendor_bill_bp)
 app.register_blueprint(customer_bp)
 app.register_blueprint(vendor_bp)
+
+from app import routes
