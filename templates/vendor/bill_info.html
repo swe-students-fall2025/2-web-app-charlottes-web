@@ -37,9 +37,9 @@
         </table>
 
         <div class="text-end mt-4">
-            <p><strong>Subtotal:</strong> ${{ bill.subtotal }}</p>
-            <p><strong>Tax ({{ tax }}%):</strong> ${{ bill.subtotal * tax / 100 }}</p>
-            <h4><strong>Total:</strong> ${{ bill.subtotal + (bill.subtotal * tax / 100) }}</h4>
+            <p><strong>Subtotal:</strong> ${{ "%.2f"|format(bill.subtotal) }}</p>
+            <p><strong>Tax ({{ "%.2f"|format(tax) }}%):</strong> ${{ "%.2f"|format(bill.subtotal * tax / 100) }}</p>
+            <h4><strong>Total:</strong> ${{ "%.2f"|format(bill.subtotal + (bill.subtotal * tax / 100)) }}</h4>
         </div>
     </div>
 </div>
