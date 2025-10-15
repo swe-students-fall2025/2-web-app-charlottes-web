@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from bson.objectid import ObjectId
+import pytz
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -72,14 +72,15 @@ class Bill:
         self.vendor_id = str(bill_data.get('vendor_id', ''))
         # self.group_id = str(bill_data.get('group_id', ''))
         self.table_number = str(bill_data.get('table_number', ''))
-        self.items = bill_data.get('items', [])
-        self.total_amount = bill_data.get('total_amount', 0.0)
+        self.contents = bill_data.get('contents', [])
+        self.subtotal = bill_data.get('subtotal', 0.0)
         self.status = bill_data.get('status', 'pending')
         self.session_code = bill_data.get('session_code', '')
-        self.participants = bill_data.get("participants", [])
         # self.estimated_total = bill_data.get('estimated_total', 0.0)
         # self.final_total = bill_data.get('final_total', 0.0)
-        # self.created_at = bill_data.get('created_at', datetime.utcnow())
+        self.created_at = bill_data.get(
+            'created_at', datetime.now(pytz.timezone('US/Eastern'))
+        )
         # self.updated_at = bill_data.get('updated_at', datetime.utcnow())
 
 class Payment:

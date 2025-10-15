@@ -1,12 +1,16 @@
 import random
 import string
+from datetime import datetime
 
+import pytz
+from bson import ObjectId
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from pymongo.errors import DuplicateKeyError
 
 from app import mongo
 
+TAX_RATE = 8.0  # tax rate
 CODE_LENGTH = 6  # group join code length
 
 vendor_bill_bp = Blueprint(
@@ -23,28 +27,35 @@ def create_bill():
     '''
     Create a bill
     '''
-    mongo.db.bills.create_index([("session_code", 1)], unique=True)
     if current_user.user_type != 'vendor':
         flash("Access denied.", "error")
         return redirect(url_for("customer.dashboard"))
+    mongo.db.bills.create_index([("session_code", 1)], unique=True)
     while True:
         try:
             new_bill = {
                 "vendor_id": current_user.id,
                 "table_number": request.form.get("table_number"),
-                "items": [],
+                "contents": [],
                 "total_amount": 0,
                 "status": "pending",
                 "session_code": generate_code(),
-                "participants": {}
+                "created_at": datetime.now(pytz.timezone("US/Eastern"))
             }
-            mongo.db.bills.insert_one(new_bill)
+            new_bill = mongo.db.bills.insert_one(new_bill)
             break
         except DuplicateKeyError:
             pass
 
-    # TODO: Go to bill page
-    return redirect(url_for("vendor.dashboard"))
+    return redirect(
+        url_for("vendor_bills.display_bill", bill_id=new_bill.inserted_id)
+    )
+
+
+def generate_code():
+    return "".join(
+        random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH)
+    )
 
 
 @vendor_bill_bp.route('/detail/<bill_id>', methods=['GET'])
@@ -53,11 +64,15 @@ def display_bill(bill_id):
     '''
     Display information for a bill
     '''
-    bill = mongo.db.bills.find_one({"_id": bill_id})
-    return "HI"
-
-
-def generate_code():
-    return "".join(
-        random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH)
+    if current_user.user_type != 'vendor':
+        flash("Access denied.", "error")
+        return redirect(url_for("customer.dashboard"))
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    if not bill:
+        flash("Bill not found.", "error")
+        return redirect(url_for("vendor.dashboard"))
+    return render_template(
+        'vendor/bill_info.html',
+        bill=bill,
+        tax=TAX_RATE
     )
