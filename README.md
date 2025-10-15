@@ -22,30 +22,28 @@ The app simplifies group payments by enabling vendors to process one shared bill
 
 ## Steps necessary to run the software
 
-1. Clone this repository by running the following command in terminal.
+1. Clone this repository and move into the project directory.
 
     ```bash
-    git clone https://github.com/swe-students-fall2025/2-web-app-charlottes-web.git    
+    git clone https://github.com/swe-students-fall2025/2-web-app-charlottes-web.git
+    cd /path/to/the/project/2-web-app-charlottes-web
     ```
 
-2. Create a virtual environment. Make sure to use Python version 3.10 or above.
+2. Create a `.env` file in the root of the directory, and add MongoDB credentials.
 
     ```bash
-    python -m venv .venv
+    MONGO_URI=mongodb_uri_here
+    DB_NAME=database_name_here
     ```
 
-3. Activate the virtual environment by running the following command in terminal.
+3. Install all necessary packages and activate the virtual environment.
 
     ```bash
-    source .venv/bin/activate
+    pipenv install
+    pipenv shell
     ```
 
-4. Install all required dependencies listed in `requirements.txt`.
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-5. Run the Flask development server by running the following command in terminal.
+4. Run the Flask development server, and open the application in your browser.
 
     ```bash
     flask run
