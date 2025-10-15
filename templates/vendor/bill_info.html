@@ -41,6 +41,12 @@
             <p><strong>Tax ({{ "%.2f"|format(tax) }}%):</strong> ${{ "%.2f"|format(bill.subtotal * tax / 100) }}</p>
             <h4><strong>Total:</strong> ${{ "%.2f"|format(bill.subtotal + (bill.subtotal * tax / 100)) }}</h4>
         </div>
+        <hr>
+        <div class="d-flex justify-content-between">
+            <a href="" class="btn btn-primary w-25">Add</a>
+            <a href="" class="btn btn-secondary w-25">Edit</a>
+            <a href="" class="btn btn-danger w-25">Delete</a>
+        </div>
     </div>
 </div>
 {% endblock %}
