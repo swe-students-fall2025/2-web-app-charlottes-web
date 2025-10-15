@@ -65,9 +65,8 @@
                                             {{ bill.status|capitalize }}
                                         </span>
                                     </td>
-                                    <td>${{ "%.2f"|format(bill.total_amount) }}</td>
+                                    <td>${{ "%.2f"|format(bill.subtotal) }}</td>
                                     <td>
-                                        <!-- TODO: Temporarily redirect to vendor dashboard until bill detail page is implemented -->
                                         <a href="{{ url_for('vendor_bills.display_bill', bill_id=bill._id)}}"
                                             class="btn btn-sm btn-primary">View</a>
                                     </td>
