@@ -67,6 +67,7 @@
                                     </td>
                                     <td>${{ "%.2f"|format(bill.total_amount) }}</td>
                                     <td>
+                                        <!-- TODO: Temporarily redirect to vendor dashboard until bill detail page is implemented -->
                                         <a href="{{ url_for('vendor.dashboard')}}"
                                             class="btn btn-sm btn-primary">View</a>
                                     </td>
