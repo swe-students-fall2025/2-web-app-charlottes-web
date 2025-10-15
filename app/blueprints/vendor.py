@@ -173,5 +173,5 @@ def create_bill():
 
 def generate_code():
     return "".join(
-        random.choices(string.ascii_uppercase + string.digits, CODE_LENGTH)
+        random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH)
     )
