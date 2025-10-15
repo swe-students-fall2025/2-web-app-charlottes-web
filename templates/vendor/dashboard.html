@@ -68,7 +68,7 @@
                                     <td>${{ "%.2f"|format(bill.total_amount) }}</td>
                                     <td>
                                         <!-- TODO: Temporarily redirect to vendor dashboard until bill detail page is implemented -->
-                                        <a href="{{ url_for('vendor.dashboard')}}"
+                                        <a href="{{ url_for('vendor_bills.display_bill', bill_id=bill._id)}}"
                                             class="btn btn-sm btn-primary">View</a>
                                     </td>
                                 </tr>
@@ -83,13 +83,13 @@
     </div>
 
     <!-- Add Bill Modal -->
-    <div class="modal fade" id="addBillModal" tabindex="-1" aria-labelledby="addBillModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addBillModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form method="POST" action="{{ url_for('vendor.create_bill') }}">
+                <form method="POST" action="{{ url_for('vendor_bills.create_bill') }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="addBillModalLabel">Create New Bill</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <div class="modal-body">
