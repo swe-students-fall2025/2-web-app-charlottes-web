@@ -35,10 +35,13 @@ def load_user(user_id):
     return None
 
 from app.blueprints.auth import auth_bp
+from app.blueprints.bills import customer_bill_bp, vendor_bill_bp
 from app.blueprints.customer import customer_bp
 from app.blueprints.vendor import vendor_bp
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(customer_bill_bp)
+app.register_blueprint(vendor_bill_bp)
 app.register_blueprint(customer_bp)
 app.register_blueprint(vendor_bp)
 

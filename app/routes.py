@@ -1,6 +1,8 @@
-from flask import render_template, redirect, url_for
+from flask import redirect, render_template, url_for
 from flask_login import current_user
+
 from app import app
+
 
 @app.route('/')
 @app.route('/index')

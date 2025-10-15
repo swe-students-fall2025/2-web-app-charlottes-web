@@ -1,15 +1,10 @@
-import random
-import string
-
 from bson.objectid import ObjectId
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from pymongo.errors import DuplicateKeyError
 
 from app import mongo
 
 vendor_bp = Blueprint('vendor', __name__, url_prefix='/vendor')
-CODE_LENGTH = 6  # group join code length
 
 
 @vendor_bp.route('/dashboard')
@@ -140,39 +135,3 @@ def delete_menu_item(item_id):
         flash('Error deleting menu item.', 'error')
 
     return redirect(url_for('vendor.menu'))
-
-
-@vendor_bp.route('/bill/create', methods=['POST'])
-@login_required
-def create_bill():
-    '''
-    Create a bill
-    '''
-    mongo.db.bills.create_index([("session_code", 1)], unique=True)
-    if current_user.user_type != 'vendor':
-        flash("Access denied.", "error")
-        return redirect(url_for("customer.dashboard"))
-    while True:
-        try:
-            new_bill = {
-                "vendor_id": current_user.id,
-                "table_number": request.form.get("table_number"),
-                "items": [],
-                "total_amount": 0,
-                "status": "pending",
-                "session_code": generate_code(),
-                "participants": {}
-            }
-            mongo.db.bills.insert_one(new_bill)
-            break
-        except DuplicateKeyError:
-            pass
-
-    # TODO: Go to bill page
-    return redirect(url_for("vendor.dashboard"))
-
-
-def generate_code():
-    return "".join(
-        random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH)
-    )
