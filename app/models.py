@@ -76,6 +76,7 @@ class Bill:
         self.total_amount = bill_data.get('total_amount', 0.0)
         self.status = bill_data.get('status', 'pending')
         self.session_code = bill_data.get('session_code', '')
+        self.participants = bill_data.get("participants", [])
         # self.estimated_total = bill_data.get('estimated_total', 0.0)
         # self.final_total = bill_data.get('final_total', 0.0)
         # self.created_at = bill_data.get('created_at', datetime.utcnow())
@@ -114,18 +115,18 @@ class OrderItem:
         self.assigned_to = item_data.get('assigned_to', [])  # user_ids
         self.split_type = item_data.get('split_type', 'equal')
 
-class PaymentSession:
-    '''
-    group payment session - vendor activates the code/link
-    '''
-    def __init__(self, session_data):
-        self.id = str(session_data.get('_id', ''))
-        self.bill_id = str(session_data.get('bill_id', ''))
-        self.vendor_id = str(session_data.get('vendor_id', ''))
-        self.group_id = str(session_data.get('group_id', ''))
-        self.code = session_data.get('code', '')  # code that customers will enter
-        self.active = session_data.get('active', True)  # status that vendors can activate/deactivate
-        # self.hold_enabled = session_data.get('hold_enabled', False)  # status for authorization hold
-        self.status = session_data.get('status', 'editing')  # 'editing', 'confirmed', 'cancelled'
-        self.confirmed_by = session_data.get('confirmed_by', [])
-        # self.created_at = session_data.get('created_at', datetime.utcnow())
+# class PaymentSession:
+#     '''
+#     group payment session - vendor activates the code/link
+#     '''
+#     def __init__(self, session_data):
+#         self.id = str(session_data.get('_id', ''))
+#         self.bill_id = str(session_data.get('bill_id', ''))
+#         self.vendor_id = str(session_data.get('vendor_id', ''))
+#         self.group_id = str(session_data.get('group_id', ''))
+#         self.code = session_data.get('code', '')  # code that customers will enter
+#         self.active = session_data.get('active', True)  # status that vendors can activate/deactivate
+#         # self.hold_enabled = session_data.get('hold_enabled', False)  # status for authorization hold
+#         self.status = session_data.get('status', 'editing')  # 'editing', 'confirmed', 'cancelled'
+#         self.confirmed_by = session_data.get('confirmed_by', [])
+#         # self.created_at = session_data.get('created_at', datetime.utcnow())

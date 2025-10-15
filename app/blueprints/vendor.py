@@ -160,7 +160,8 @@ def create_bill():
                 "items": [],
                 "total_amount": 0,
                 "status": "pending",
-                "session_code": generate_code()
+                "session_code": generate_code(),
+                "participants": {}
             }
             mongo.db.bills.insert_one(new_bill)
             break
