@@ -6,6 +6,9 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_pymongo import PyMongo
 
+TAX_RATE = 8
+CODE_LENGTH = 6
+
 # Load .env from parent directory (override existing env vars)
 basedir = Path(__file__).parent.parent
 load_dotenv(basedir / '.env', override=True)

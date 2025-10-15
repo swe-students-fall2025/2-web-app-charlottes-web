@@ -8,10 +8,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from pymongo.errors import DuplicateKeyError
 
-from app import mongo
-
-TAX_RATE = 8.0  # tax rate
-CODE_LENGTH = 6  # group join code length
+from app import CODE_LENGTH, TAX_RATE, mongo
 
 vendor_bill_bp = Blueprint(
     'vendor_bills', f"vendor_{__name__}", url_prefix='/vendor/bill'
@@ -37,7 +34,7 @@ def create_bill():
                 "vendor_id": current_user.id,
                 "table_number": request.form.get("table_number"),
                 "contents": [],
-                "total_amount": 0,
+                "subtotal": 0,
                 "status": "pending",
                 "session_code": generate_code(),
                 "created_at": datetime.now(pytz.timezone("US/Eastern"))
