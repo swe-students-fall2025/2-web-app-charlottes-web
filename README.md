@@ -29,12 +29,7 @@ The app simplifies group payments by enabling vendors to process one shared bill
     cd /path/to/the/project/2-web-app-charlottes-web
     ```
 
-2. Create a `.env` file in the root of the directory, and add MongoDB credentials.
-
-    ```bash
-    MONGO_URI=mongodb_uri_here
-    DB_NAME=database_name_here
-    ```
+2. Create a `.env` file in the root of the directory, following the `env.example` file.
 
 3. Install all necessary packages and activate the virtual environment.
 
