@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="vendor-menu">
+    {% if menu_items %}
+    <div class="row">
+        {% for item in menu_items %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">{{ item.name }}</h5>
+                        <span class="badge bg-{{ 'success' if item.available else 'secondary' }}">
+                            {{ 'Available' if item.available else 'Unavailable' }}
+                        </span>
+                    </div>
+                    <p class="card-text text-muted">{{ item.description or 'No description' }}</p>
+                    <p class="card-text">
+                        <strong>Price:</strong> ${{ "%.2f"|format(item.price) }}<br>
+                        <strong>Category:</strong> {{ item.category }}
+                    </p>
+                    {% if item.available %}
+                    <form method="POST"
+                        action="{{ url_for('vendor_bills.add_to_bill', bill_id=bill_id, item_id=item._id)}}">
+                        <input class="form-control-sm w-25 rounded-pill" type="number" name="qty" placeholder="Qty">
+                        <button type="submit" class="btn btn-sm btn-info"><strong>Add to Bill</strong></button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <p>No menu items to add to bill.</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('vendor_bills.display_bill', bill_id=bill_id) }}" class="btn btn-secondary">Back to
+            Bill</a>
+    </div>
+</div>
+{% endblock %}

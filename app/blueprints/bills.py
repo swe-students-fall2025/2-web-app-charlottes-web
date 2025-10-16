@@ -69,7 +69,41 @@ def display_bill(bill_id):
         flash("Bill not found.", "error")
         return redirect(url_for("vendor.dashboard"))
     return render_template(
-        'vendor/bill_info.html',
+        'bills/vendor_bill_info.html',
         bill=bill,
         tax=TAX_RATE
     )
+
+
+@vendor_bill_bp.route('/add_menu/<bill_id>', methods=['GET'])
+@login_required
+def view_menu_for_bill(bill_id):
+    '''
+    Render menu to add items to a bill
+    '''
+    if current_user.user_type != 'vendor':
+        flash('Access denied. Vendor account required.', 'error')
+        return redirect(url_for('customer.dashboard'))
+
+    menu_items = list(mongo.db.menu_items.find({'vendor_id': current_user.id}))
+
+    return render_template('bills/add_to_bill.html',
+                           title='Menu Items',
+                           menu_items=menu_items,
+                           bill_id=bill_id)
+
+
+@vendor_bill_bp.route('/add/<bill_id>/<item_id>', methods=['POST'])
+@login_required
+def add_to_bill(bill_id, item_id):
+    '''
+    Add a menu item to a bill
+    '''
+    if current_user.user_type != 'vendor':
+        flash('Access denied. Vendor account required.', 'error')
+        return redirect(url_for('customer.dashboard'))
+
+    menu_item = mongo.db.menu_items.find_one({
+        "_id": ObjectId(item_id)
+    })
+    return f"{bill_id}, {menu_item["name"]} x {request.form.get('qty')}"

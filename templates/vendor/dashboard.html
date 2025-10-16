@@ -89,15 +89,15 @@
             <div class="modal-content">
                 <form method="POST" action="{{ url_for('vendor_bills.create_bill') }}">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="addBillModalLabel">Create New Bill</h5>
+                        <h5 class="modal-title">Create New Bill</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="tableNumber" class="form-label">Table Number</label>
-                            <input type="text" class="form-control" id="tableNumber" name="table_number"
-                                placeholder="Enter table number" required>
+                            <label class="form-label">Table Number</label>
+                            <input type="text" class="form-control" name="table_number" placeholder="Enter table number"
+                                required>
                         </div>
                     </div>
 
