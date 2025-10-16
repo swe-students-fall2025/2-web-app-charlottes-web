@@ -22,7 +22,8 @@
                     {% if item.available %}
                     <form method="POST"
                         action="{{ url_for('vendor_bills.add_to_bill', bill_id=bill_id, item_id=item._id)}}">
-                        <input class="form-control-sm w-25 rounded-pill" type="number" name="qty" placeholder="Qty">
+                        <input class="form-control-sm w-25 rounded-pill" type="number" name="qty" placeholder="Qty"
+                            value="1">
                         <button type="submit" class="btn btn-sm btn-info"><strong>Add to Bill</strong></button>
                     </form>
                     {% endif %}
