@@ -92,10 +92,12 @@ def display_bill(bill_id):
     if current_user.user_type != 'vendor':
         flash("Access denied.", "error")
         return redirect(url_for("customer.dashboard"))
+
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
-    if not bill:
+    if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
         return redirect(url_for("vendor.dashboard"))
+
     return render_template(
         'bills/vendor_bill_info.html',
         bill=bill,
@@ -112,6 +114,10 @@ def view_menu_for_bill(bill_id):
     if current_user.user_type != 'vendor':
         flash('Access denied. Vendor account required.', 'error')
         return redirect(url_for('customer.dashboard'))
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    if not bill or bill["vendor_id"] != current_user.id:
+        flash("Bill not found.", "error")
+        return redirect(url_for("vendor.dashboard"))
 
     menu_items = list(mongo.db.menu_items.find({'vendor_id': current_user.id}))
 
@@ -130,6 +136,10 @@ def add_to_bill(bill_id, item_id):
     if current_user.user_type != 'vendor':
         flash('Access denied. Vendor account required.', 'error')
         return redirect(url_for('customer.dashboard'))
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    if not bill or bill["vendor_id"] != current_user.id:
+        flash("Bill not found.", "error")
+        return redirect(url_for("vendor.dashboard"))
 
     menu_item = mongo.db.menu_items.find_one({
         "_id": ObjectId(item_id)
@@ -150,6 +160,7 @@ def add_to_bill(bill_id, item_id):
         },
         return_document=ReturnDocument.AFTER
     )
+
     return redirect(url_for("vendor_bills.display_bill", bill_id=bill["_id"]))
 
 
@@ -162,6 +173,10 @@ def delete_from_bill(bill_id, item_id):
     if current_user.user_type != 'vendor':
         flash('Access denied. Vendor account required.', 'error')
         return redirect(url_for('customer.dashboard'))
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    if not bill or bill["vendor_id"] != current_user.id:
+        flash("Bill not found.", "error")
+        return redirect(url_for("vendor.dashboard"))
 
     bill_contents = (
         mongo.db.bills.find_one({"_id": ObjectId(bill_id)})["contents"]
@@ -190,6 +205,10 @@ def delete(bill_id):
     if current_user.user_type != 'vendor':
         flash('Access denied. Vendor account required.', 'error')
         return redirect(url_for('customer.dashboard'))
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    if not bill or bill["vendor_id"] != current_user.id:
+        flash("Bill not found.", "error")
+        return redirect(url_for("vendor.dashboard"))
 
     mongo.db.bills.delete_one({"_id": ObjectId(bill_id)})
     return redirect(url_for("vendor.dashboard"))
