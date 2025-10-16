@@ -156,6 +156,9 @@ def add_to_bill(bill_id, item_id):
 @vendor_bill_bp.route('/delete_from_bill/<bill_id>/<item_id>')
 @login_required
 def delete_from_bill(bill_id, item_id):
+    '''
+    Delete a specified item from a bill
+    '''
     if current_user.user_type != 'vendor':
         flash('Access denied. Vendor account required.', 'error')
         return redirect(url_for('customer.dashboard'))
@@ -176,3 +179,17 @@ def delete_from_bill(bill_id, item_id):
         }
     )
     return redirect(url_for("vendor_bills.display_bill", bill_id=bill["_id"]))
+
+
+@vendor_bill_bp.route('/delete/<bill_id>')
+@login_required
+def delete(bill_id):
+    '''
+    Delete a bill
+    '''
+    if current_user.user_type != 'vendor':
+        flash('Access denied. Vendor account required.', 'error')
+        return redirect(url_for('customer.dashboard'))
+
+    mongo.db.bills.delete_one({"_id": ObjectId(bill_id)})
+    return redirect(url_for("vendor.dashboard"))
