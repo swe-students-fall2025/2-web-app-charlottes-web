@@ -147,8 +147,4 @@ def add_to_bill(bill_id, item_id):
         },
         return_document=ReturnDocument.AFTER
     )
-    return render_template(
-        'bills/vendor_bill_info.html',
-        bill=bill,
-        tax=TAX_RATE
-    )
+    return redirect(url_for("vendor_bills.display_bill", bill_id=bill["_id"]))
