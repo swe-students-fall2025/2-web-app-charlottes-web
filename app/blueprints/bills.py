@@ -1,11 +1,14 @@
 import random
 import string
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Optional
 
 import pytz
 from bson import ObjectId
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from app import CODE_LENGTH, TAX_RATE, mongo
@@ -16,6 +19,28 @@ vendor_bill_bp = Blueprint(
 customer_bill_bp = Blueprint(
     'customer_bills', f"customer_{__name__}", url_prefix='/customer/bill'
 )
+
+
+@dataclass
+class OrderItem:
+    item_id: str
+    name: str
+    price: float
+    quantity: int
+    bill_id: str
+    assigned_to: Optional[str] = None
+    split_type: str = "equal"
+
+    def to_dict(self):
+        return {
+            "item_id": self.item_id,
+            "name": self.name,
+            "price": self.price,
+            "quantity": self.quantity,
+            "bill_id": self.bill_id,
+            "assigned_to": self.assigned_to,
+            "split_type": self.split_type
+        }
 
 
 @vendor_bill_bp.route('/create', methods=['POST'])
@@ -106,4 +131,24 @@ def add_to_bill(bill_id, item_id):
     menu_item = mongo.db.menu_items.find_one({
         "_id": ObjectId(item_id)
     })
-    return f"{bill_id}, {menu_item["name"]} x {request.form.get('qty')}"
+    quantity = float(request.form.get("qty", 1))
+    new_order_item = OrderItem(
+        item_id=menu_item["_id"],
+        name=menu_item["name"],
+        price=menu_item["price"],
+        quantity=quantity,
+        bill_id=bill_id
+    )
+    bill = mongo.db.bills.find_one_and_update(
+        {"_id": ObjectId(bill_id)},
+        {
+            "$inc": {"subtotal": menu_item["price"] * quantity},
+            "$push": {"contents": new_order_item.to_dict()}
+        },
+        return_document=ReturnDocument.AFTER
+    )
+    return render_template(
+        'bills/vendor_bill_info.html',
+        bill=bill,
+        tax=TAX_RATE
+    )
