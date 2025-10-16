@@ -1,6 +1,7 @@
 import random
 import string
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
@@ -30,9 +31,11 @@ class OrderItem:
     bill_id: str
     assigned_to: Optional[str] = None
     split_type: str = "equal"
+    _id: uuid = field(default_factory=lambda: str(uuid.uuid4()))
 
     def to_dict(self):
         return {
+            "_id": self._id,
             "item_id": self.item_id,
             "name": self.name,
             "price": self.price,
@@ -133,7 +136,7 @@ def add_to_bill(bill_id, item_id):
     })
     quantity = float(request.form.get("qty", 1))
     new_order_item = OrderItem(
-        item_id=menu_item["_id"],
+        item_id=str(menu_item["_id"]),
         name=menu_item["name"],
         price=menu_item["price"],
         quantity=quantity,
@@ -146,5 +149,30 @@ def add_to_bill(bill_id, item_id):
             "$push": {"contents": new_order_item.to_dict()}
         },
         return_document=ReturnDocument.AFTER
+    )
+    return redirect(url_for("vendor_bills.display_bill", bill_id=bill["_id"]))
+
+
+@vendor_bill_bp.route('/delete_from_bill/<bill_id>/<item_id>')
+@login_required
+def delete_from_bill(bill_id, item_id):
+    if current_user.user_type != 'vendor':
+        flash('Access denied. Vendor account required.', 'error')
+        return redirect(url_for('customer.dashboard'))
+
+    bill_contents = (
+        mongo.db.bills.find_one({"_id": ObjectId(bill_id)})["contents"]
+    )
+
+    item = next(
+        (item for item in bill_contents if item["_id"] == item_id), None
+    )
+
+    bill = mongo.db.bills.find_one_and_update(
+        {"_id": ObjectId(bill_id)},
+        {
+            "$pull": {"contents": {"_id": item["_id"]}},
+            "$inc": {"subtotal": -item["price"]}
+        }
     )
     return redirect(url_for("vendor_bills.display_bill", bill_id=bill["_id"]))

@@ -15,7 +15,7 @@
         <hr>
 
         <h3 class="mt-4 mb-3">Items Ordered</h3>
-        <table class="table table-striped fs-6">
+        <table class="table table-striped fs-6" style="table-layout: fixed;">
             <thead>
                 <tr>
                     <th>Item</th>
@@ -32,8 +32,8 @@
                     <td class="align-content-center">{{ item.quantity }}</td>
                     <td class="align-content-center">${{ "%.2f"|format(item.price) }}</td>
                     <td class="w-50 align-content-center">${{ "%.2f"|format(item.price * item.quantity) }}</td>
-                    <td style="width: 1ch" class="align-content-center">
-                        <a href="{{ url_for('vendor_bills.delete_from_bill', item_id=item._id)}}"
+                    <td class="d-flex align-content-center justify-content-end">
+                        <a href="{{ url_for('vendor_bills.delete_from_bill', bill_id=bill._id, item_id=item._id) }}"
                             class="btn fa fs-5 text-muted">&#xf014;</a>
                     </td>
                 </tr>
