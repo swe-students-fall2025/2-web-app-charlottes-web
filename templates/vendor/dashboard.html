@@ -37,13 +37,14 @@
                 <div class="card-body">
                     {% if active_bills %}
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover table-striped">
                             <thead>
                                 <tr>
                                     <th>Bill ID</th>
                                     <th>Table</th>
-                                    <th>Group</th>
+                                    <!-- <th>Group</th> -->
                                     <th>Status</th>
+                                    <th>Subtotal</th>
                                     <th>Total</th>
                                     <th>Actions</th>
                                 </tr>
@@ -53,22 +54,22 @@
                                 <tr>
                                     <td>#{{ bill._id|string|truncate(8, True, '') }}</td>
                                     <td>{{ bill.table_number }}</td>
-                                    <td>
+                                    <!-- <td>
                                         {% if bill.group_id %}
                                         Group #{{ bill.group_id|string|truncate(8, True, '') }}
                                         {% else %}
                                         N/A
                                         {% endif %}
-                                    </td>
+                                    </td> -->
                                     <td>
                                         <span class="badge bg-{{ 'warning' if bill.status == 'pending' else 'info' }}">
                                             {{ bill.status|capitalize }}
                                         </span>
                                     </td>
-                                    <td>${{ "%.2f"|format(bill.total_amount) }}</td>
+                                    <td>${{ "%.2f"|format(bill.subtotal) }}</td>
+                                    <td>${{ "%.2f"|format(bill.subtotal * (1 + tax / 100)) }}</td>
                                     <td>
-                                        <!-- TODO: Temporarily redirect to vendor dashboard until bill detail page is implemented -->
-                                        <a href="{{ url_for('vendor.dashboard')}}"
+                                        <a href="{{ url_for('vendor_bills.display_bill', bill_id=bill._id)}}"
                                             class="btn btn-sm btn-primary">View</a>
                                     </td>
                                 </tr>
@@ -83,20 +84,20 @@
     </div>
 
     <!-- Add Bill Modal -->
-    <div class="modal fade" id="addBillModal" tabindex="-1" aria-labelledby="addBillModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addBillModal">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form method="POST" action="{{ url_for('vendor.create_bill') }}">
+                <form method="POST" action="{{ url_for('vendor_bills.create_bill') }}">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="addBillModalLabel">Create New Bill</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h5 class="modal-title">Create New Bill</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="tableNumber" class="form-label">Table Number</label>
-                            <input type="text" class="form-control" id="tableNumber" name="table_number"
-                                placeholder="Enter table number" required>
+                            <label class="form-label">Table Number</label>
+                            <input type="text" class="form-control" name="table_number" placeholder="Enter table number"
+                                required>
                         </div>
                     </div>
 
