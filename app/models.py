@@ -16,21 +16,23 @@ class User(UserMixin):
         self.password_hash = user_data.get('password_hash', '')
         self.user_type = user_data.get('user_type', 'customer')
         # self.phone = user_data.get('phone', '')
-        self.payment_method = user_data.get('payment_method', {})  # for customers
-        self.vendor_name = user_data.get('vendor_name', '')  # for vendors
+        self.payment_method = user_data.get('payment_method', {})
+        self.vendor_name = user_data.get('vendor_name', '')
         # self.created_at = user_data.get('created_at', datetime.utcnow())
 
     def set_password(self, password):
         return generate_password_hash(password)
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
     def get_id(self):
         return self.id
-    
+
     @staticmethod
-    def create_user_dict(username, email, password, user_type='customer', **kwargs):
+    def create_user_dict(
+        username, email, password, user_type='customer', **kwargs
+    ):
         '''
         Create user dict to save in MongoDB
         '''
@@ -42,14 +44,15 @@ class User(UserMixin):
             # 'phone': kwargs.get('phone', ''),
             # 'created_at': datetime.utcnow()
         }
-        
+
         if user_type == 'customer':
             user_dict['payment_method'] = kwargs.get('payment_method', {})
         elif user_type == 'vendor':
             user_dict['vendor_name'] = kwargs.get('vendor_name', '')
-        
-        return user_dict    
-    
+
+        return user_dict
+
+
 class Group:
     '''
     Group model
@@ -59,9 +62,14 @@ class Group:
         self.name = group_data.get('name', '')
         self.creator_id = str(group_data.get('creator_id', ''))
         self.members = [str(m) for m in group_data.get('members', [])]
-        self.active_bill_id = str(group_data.get('active_bill_id', '')) if group_data.get('active_bill_id') else None
+        self.active_bill_id = (
+            str(group_data.get('active_bill_id', ''))
+            if group_data.get('active_bill_id') else None
+        )
         self.active = group_data.get('active', True)
+        self.code = group_data.get('code', "")
         # self.created_at = group_data.get('created_at', datetime.utcnow())
+
 
 class Bill:
     '''
@@ -83,6 +91,7 @@ class Bill:
         )
         # self.updated_at = bill_data.get('updated_at', datetime.utcnow())
 
+
 class Payment:
     '''
     Payment model
@@ -98,11 +107,15 @@ class Payment:
         # self.created_at = payment_data.get('created_at', datetime.utcnow())
         self.completed_at = payment_data.get('completed_at', None)
 
-        # self.authorization_hold = payment_data.get('authorization_hold', None)
+        # self.authorization_hold = payment_data.get(
+        #     'authorization_hold', None
+        # )
         # self.planned_amount = payment_data.get('planned_amount', 0.0)
         # self.captured_amount = payment_data.get('captured_amount', 0.0)
-        # self.hold_status = payment_data.get('hold_status', None)  # 'authorized', 'voided', 'captured'
+        # self.hold_status = payment_data.get('hold_status', None)
 
+
+# Better defined in blueprints/bills.py
 class OrderItem:
     '''
     individually ordered items
@@ -115,19 +128,3 @@ class OrderItem:
         self.quantity = item_data.get('quantity', 1)
         self.assigned_to = item_data.get('assigned_to', [])  # user_ids
         self.split_type = item_data.get('split_type', 'equal')
-
-# class PaymentSession:
-#     '''
-#     group payment session - vendor activates the code/link
-#     '''
-#     def __init__(self, session_data):
-#         self.id = str(session_data.get('_id', ''))
-#         self.bill_id = str(session_data.get('bill_id', ''))
-#         self.vendor_id = str(session_data.get('vendor_id', ''))
-#         self.group_id = str(session_data.get('group_id', ''))
-#         self.code = session_data.get('code', '')  # code that customers will enter
-#         self.active = session_data.get('active', True)  # status that vendors can activate/deactivate
-#         # self.hold_enabled = session_data.get('hold_enabled', False)  # status for authorization hold
-#         self.status = session_data.get('status', 'editing')  # 'editing', 'confirmed', 'cancelled'
-#         self.confirmed_by = session_data.get('confirmed_by', [])
-#         # self.created_at = session_data.get('created_at', datetime.utcnow())
