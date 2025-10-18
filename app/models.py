@@ -67,6 +67,7 @@ class Group:
             if group_data.get('active_bill_id') else None
         )
         self.active = group_data.get('active', True)
+        self.code = group_data.get('code', "")
         # self.created_at = group_data.get('created_at', datetime.utcnow())
 
 
@@ -114,6 +115,7 @@ class Payment:
         # self.hold_status = payment_data.get('hold_status', None)
 
 
+# Better defined in blueprints/bills.py
 class OrderItem:
     '''
     individually ordered items
