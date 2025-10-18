@@ -1,9 +1,15 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
-from flask_login import current_user, login_required
-from app import mongo
+import random
+import string
+
 from bson.objectid import ObjectId
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+from pymongo.errors import DuplicateKeyError
+
+from app import CODE_LENGTH, mongo
 
 customer_bp = Blueprint('customer', __name__, url_prefix='/customer')
+
 
 @customer_bp.route('/dashboard')
 def dashboard():
@@ -13,11 +19,18 @@ def dashboard():
     # Find all groups where user is a member
     groups = mongo.db.groups.find({'members': current_user.id})
     groups_list = list(groups)
-    
-    return render_template('customer/dashboard.html', 
-                           title='My Groups', 
+
+    return render_template('customer/dashboard.html',
+                           title='My Groups',
                            groups=groups_list,
                            user_id=current_user.id)
+
+
+def generate_code():
+    return "".join(
+        random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH)
+    )
+
 
 @customer_bp.route('/group/create', methods=['GET', 'POST'])
 @login_required
@@ -26,32 +39,39 @@ def create_group():
     Create a new group
     '''
     if request.method == 'POST':
+        mongo.db.groups.create_index([("code", 1)], unique=True)
         # Get form data
         group_name = request.form.get('group_name')
-        
+
         # Validate
         if not group_name or len(group_name.strip()) == 0:
             flash('Group name is required', 'error')
             return redirect(url_for('customer.create_group'))
 
-        # Create group document
-        new_group = {
-            'name': group_name.strip(),
-            'creator_id': current_user.id,
-            'members': [current_user.id],
-            'active_bill_id': None,
-            'active': True,
-            'created_at': None
-        }
-
-        # Insert into MongoDB
-        result = mongo.db.groups.insert_one(new_group)
+        while True:
+            try:
+                # Create group document
+                new_group = {
+                    'name': group_name.strip(),
+                    'creator_id': current_user.id,
+                    'members': [current_user.id],
+                    'active_bill_id': None,
+                    'active': True,
+                    'created_at': None,
+                    'code': generate_code()
+                }
+                # Insert into MongoDB
+                mongo.db.groups.insert_one(new_group)
+                break
+            except DuplicateKeyError:
+                pass
 
         flash(f'Group "{group_name}" created successfully!', 'success')
         return redirect(url_for('customer.dashboard'))
-    
+
     # GET request - show form
     return render_template('customer/create_group.html', title='Create Group')
+
 
 @customer_bp.route('/group/join', methods=['GET', 'POST'])
 @login_required
@@ -61,7 +81,7 @@ def join_group():
     '''
     if request.method == 'POST':
         group_id = request.form.get('group_id')
-        
+
         # Validate input
         if not group_id or len(group_id.strip()) == 0:
             flash('Group ID is required', 'error')
@@ -69,10 +89,16 @@ def join_group():
 
         try:
             # Find the group
-            group = mongo.db.groups.find_one({'_id': ObjectId(group_id.strip())})
+            group = mongo.db.groups.find_one(
+                {'code': group_id.strip().upper()}
+            )
 
             if not group:
-                flash('Group not found. Please check the Group ID and try again.', 'error')
+                flash(
+                    'Group not found. '
+                    'Please check the Group ID and try again.',
+                    'error'
+                )
                 return redirect(url_for('customer.join_group'))
 
             # Check if user is already a member
@@ -82,7 +108,7 @@ def join_group():
 
             # Add user to group members
             mongo.db.groups.update_one(
-                {'_id': ObjectId(group_id.strip())},
+                {'_id': group["_id"]},
                 {'$push': {'members': current_user.id}}
             )
 
@@ -92,9 +118,10 @@ def join_group():
         except Exception:
             flash('Invalid Group ID format. Please try again.', 'error')
             return redirect(url_for('customer.join_group'))
-    
+
     # GET request - show form
     return render_template('customer/join_group.html', title='Join Group')
+
 
 @customer_bp.route('/group/<group_id>')
 @login_required
@@ -105,7 +132,7 @@ def group_detail(group_id):
     try:
         # Find the group
         group = mongo.db.groups.find_one({'_id': ObjectId(group_id)})
-        
+
         if not group:
             flash('Group not found.', 'error')
             return redirect(url_for('customer.dashboard'))
@@ -122,18 +149,23 @@ def group_detail(group_id):
         # Get active bill if exists
         active_bill = None
         if group.get('active_bill_id'):
-            active_bill = mongo.db.bills.find_one({'_id': ObjectId(group['active_bill_id'])})
+            active_bill = mongo.db.bills.find_one(
+                {'_id': ObjectId(group['active_bill_id'])}
+            )
 
         return render_template('customer/group_detail.html',
                                title=group['name'],
                                group=group,
                                members=members,
                                active_bill=active_bill,
-                               is_creator=(current_user.id == group['creator_id']))
+                               is_creator=(
+                                   current_user.id == group['creator_id']
+                               ))
 
     except Exception:
         flash('Invalid group ID.', 'error')
         return redirect(url_for('customer.dashboard'))
+
 
 @customer_bp.route('/group/<group_id>/leave', methods=['POST'])
 @login_required
@@ -143,7 +175,7 @@ def leave_group(group_id):
     '''
     try:
         group = mongo.db.groups.find_one({'_id': ObjectId(group_id)})
-        
+
         if not group:
             flash('Group not found.', 'error')
             return redirect(url_for('customer.dashboard'))
@@ -154,9 +186,18 @@ def leave_group(group_id):
             return redirect(url_for('customer.dashboard'))
 
         # Prevent creator from leaving if there are other members
-        if current_user.id == group['creator_id'] and len(group.get('members', [])) > 1:
-            flash('As the creator, you cannot leave while other members are in the group.', 'error')
-            return redirect(url_for('customer.group_detail', group_id=group_id))
+        if (
+            current_user.id == group['creator_id']
+            and len(group.get('members', [])) > 1
+        ):
+            flash(
+                'As the creator, you cannot leave while '
+                'other members are in the group.',
+                'error'
+            )
+            return redirect(
+                url_for('customer.group_detail', group_id=group_id)
+            )
 
         # Remove user from group
         mongo.db.groups.update_one(
