@@ -39,6 +39,7 @@ def create_group():
     Create a new group
     '''
     if request.method == 'POST':
+        mongo.db.groups.create_index([("code", 1)], unique=True)
         # Get form data
         group_name = request.form.get('group_name')
 
@@ -89,7 +90,7 @@ def join_group():
         try:
             # Find the group
             group = mongo.db.groups.find_one(
-                {'_id': ObjectId(group_id.strip())}
+                {'code': group_id.strip().upper()}
             )
 
             if not group:
@@ -107,7 +108,7 @@ def join_group():
 
             # Add user to group members
             mongo.db.groups.update_one(
-                {'_id': ObjectId(group_id.strip())},
+                {'_id': group["_id"]},
                 {'$push': {'members': current_user.id}}
             )
 
