@@ -12,6 +12,7 @@ from pymongo.errors import DuplicateKeyError
 
 from app import TAX_RATE, mongo
 from app.utils.code_generator import generate_code
+from app.utils.decorators import vendor_access_required
 
 vendor_bill_bp = Blueprint(
     'vendor_bills', f"vendor_{__name__}", url_prefix='/vendor/bill'
@@ -47,13 +48,11 @@ class OrderItem:
 
 @vendor_bill_bp.route('/create', methods=['POST'])
 @login_required
+@vendor_access_required
 def create_bill():
     '''
     Create a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash("Access denied.", "error")
-        return redirect(url_for("customer.dashboard"))
     mongo.db.bills.create_index([("session_code", 1)], unique=True)
     while True:
         try:
@@ -82,10 +81,6 @@ def display_bill(bill_id):
     '''
     Display information for a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash("Access denied.", "error")
-        return redirect(url_for("customer.dashboard"))
-
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
@@ -100,13 +95,11 @@ def display_bill(bill_id):
 
 @vendor_bill_bp.route('/add_menu/<bill_id>', methods=['GET'])
 @login_required
+@vendor_access_required
 def view_menu_for_bill(bill_id):
     '''
     Render menu to add items to a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
@@ -122,13 +115,11 @@ def view_menu_for_bill(bill_id):
 
 @vendor_bill_bp.route('/add/<bill_id>/<item_id>', methods=['POST'])
 @login_required
+@vendor_access_required
 def add_to_bill(bill_id, item_id):
     '''
     Add a menu item to a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
@@ -159,13 +150,11 @@ def add_to_bill(bill_id, item_id):
 
 @vendor_bill_bp.route('/delete_from_bill/<bill_id>/<item_id>')
 @login_required
+@vendor_access_required
 def delete_from_bill(bill_id, item_id):
     '''
     Delete a specified item from a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
@@ -191,13 +180,11 @@ def delete_from_bill(bill_id, item_id):
 
 @vendor_bill_bp.route('/delete/<bill_id>')
 @login_required
+@vendor_access_required
 def delete(bill_id):
     '''
     Delete a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
