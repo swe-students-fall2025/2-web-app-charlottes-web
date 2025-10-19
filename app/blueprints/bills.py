@@ -227,9 +227,4 @@ def addgroup(bill_id, group_id):
         flash("Bill not found.", "error")
         return redirect(url_for("vendor.dashboard"))
     
-    group = mongo.db.groups.find_one({"_id": ObjectId(group_id)})
-    if not group:
-        flash("Group not found.", "error")
-        return redirect(url_for("vendor.dashboard"))
-    
-    
+    # TODO: call attach_group_to_bill() somehow?
