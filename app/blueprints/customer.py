@@ -215,3 +215,84 @@ def leave_group(group_id):
     except Exception:
         flash('An error occurred while leaving the group.', 'error')
         return redirect(url_for('customer.dashboard'))
+    
+@customer_bp.route('/bill/display/<group_id>')
+@login_required
+def display_bill(group_id):
+    """
+    Display the current active bill for a given group.
+
+    """
+    if current_user.user_type != 'customer':
+        flash('Access denied. Customer account required.', 'error')
+        return redirect(url_for('vendor.dashboard'))
+    
+    group = mongo.db.groups.find_one({"_id": ObjectId(group_id)})
+    if not group:
+        flash("Group not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
+    bill_id = group.get("active_bill_id")
+    if not bill_id:
+        flash("No active bill for this group.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    if not bill:
+        flash("Bill not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+
+    items = bill.get("contents", [])
+    group_members = group.get("members", [])
+
+    for item in items:
+        assigned = item.get("assigned_to", [])
+        item["assigned_user_objects"] = [
+            mongo.db.users.find_one({"_id": ObjectId(uid)}) for uid in assigned
+        ]
+
+    return render_template(
+        "customer/customer_bill.html",
+        bill=bill,
+        group=group,
+        items=items,
+        group_members=group_members
+    )
+
+@customer_bp.route('/bill/split/<group_id>/<item_id>/<user_id>', methods=['POST'])
+@login_required
+def split_bill(group_id, item_id, user_id):
+    '''
+    Adds an additional member into the "assigned_to" list of the item inside the bill
+    '''
+    if current_user.user_type != 'customer':
+        flash('Access denied. Customer account required.', 'error')
+        return redirect(url_for('vendor.dashboard'))
+    group = mongo.db.groups.find_one({"_id" : ObjectId(group_id)})
+    if not group:
+        flash("Group not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
+    bill = mongo.db.bills.find_one({"_id": ObjectId(group.get("active_bill_id"))})
+    if not bill:
+        flash("Bill not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
+    target_item = None
+    for content in bill.get("contents"):
+        if content.get("_id") == item_id:
+            target_item = content
+    if not target_item:
+        flash("Target item not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+
+    if user_id not in target_item["assigned_to"]:
+        mongo.db.bills.update_one({
+            {"_id": ObjectId(group.get("active_bill_id")), "contents._id": target_item.get('_id', "") },
+            {
+                "$push": {"assigned_to" : user_id }
+            }
+        })
+    
+    return redirect(url_for("customer.display_bill", group_id=group_id))
+
