@@ -78,7 +78,7 @@ class Bill:
     def __init__(self, bill_data):
         self.id = str(bill_data.get('_id', ''))
         self.vendor_id = str(bill_data.get('vendor_id', ''))
-        # self.group_id = str(bill_data.get('group_id', ''))
+        self.group_id = str(bill_data.get('group_id', ''))
         self.table_number = str(bill_data.get('table_number', ''))
         self.contents = bill_data.get('contents', [])
         self.subtotal = bill_data.get('subtotal', 0.0)
@@ -128,3 +128,15 @@ class OrderItem:
         self.quantity = item_data.get('quantity', 1)
         self.assigned_to = item_data.get('assigned_to', [])  # user_ids
         self.split_type = item_data.get('split_type', 'equal')
+
+    def to_dict(self):
+        return {
+            "_id": self._id,
+            "item_id": self.item_id,
+            "name": self.name,
+            "price": self.price,
+            "quantity": self.quantity,
+            "bill_id": self.bill_id,
+            "assigned_to": self.assigned_to,
+            "split_type": self.split_type
+        }

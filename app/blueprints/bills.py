@@ -163,7 +163,6 @@ def add_to_bill(bill_id, item_id):
 
     return redirect(url_for("vendor_bills.display_bill", bill_id=bill["_id"]))
 
-
 @vendor_bill_bp.route('/delete_from_bill/<bill_id>/<item_id>')
 @login_required
 def delete_from_bill(bill_id, item_id):
@@ -212,3 +211,25 @@ def delete(bill_id):
 
     mongo.db.bills.delete_one({"_id": ObjectId(bill_id)})
     return redirect(url_for("vendor.dashboard"))
+    
+@vendor_bill_bp.route('/addgroup/<bill_id>/<group_id>')
+@login_required
+def addgroup(bill_id, group_id):
+    '''
+    Add a group associated with bill
+    '''
+    if current_user.user_type != 'vendor':
+        flash('Access denied. Vendor account required.', 'error')
+        return redirect(url_for('customer.dashboard'))
+    
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    if not bill or bill["vendor_id"] != current_user.id:
+        flash("Bill not found.", "error")
+        return redirect(url_for("vendor.dashboard"))
+    
+    group = mongo.db.groups.find_one({"_id": ObjectId(group_id)})
+    if not group:
+        flash("Group not found.", "error")
+        return redirect(url_for("vendor.dashboard"))
+    
+    
