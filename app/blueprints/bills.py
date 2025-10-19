@@ -1,5 +1,3 @@
-import random
-import string
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -12,7 +10,8 @@ from flask_login import current_user, login_required
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from app import CODE_LENGTH, TAX_RATE, mongo
+from app import TAX_RATE, mongo
+from app.utils.code_generator import generate_code
 
 vendor_bill_bp = Blueprint(
     'vendor_bills', f"vendor_{__name__}", url_prefix='/vendor/bill'
@@ -74,12 +73,6 @@ def create_bill():
 
     return redirect(
         url_for("vendor_bills.display_bill", bill_id=new_bill.inserted_id)
-    )
-
-
-def generate_code():
-    return "".join(
-        random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH)
     )
 
 
