@@ -1,12 +1,10 @@
-import random
-import string
-
 from bson.objectid import ObjectId
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from pymongo.errors import DuplicateKeyError
 
-from app import CODE_LENGTH, mongo
+from app import mongo
+from app.utils.code_generator import generate_code
 
 customer_bp = Blueprint('customer', __name__, url_prefix='/customer')
 
@@ -24,12 +22,6 @@ def dashboard():
                            title='My Groups',
                            groups=groups_list,
                            user_id=current_user.id)
-
-
-def generate_code():
-    return "".join(
-        random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH)
-    )
 
 
 @customer_bp.route('/group/create', methods=['GET', 'POST'])
