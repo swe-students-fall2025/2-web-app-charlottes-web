@@ -67,6 +67,7 @@
             <p><strong>Subtotal:</strong> ${{ "%.2f"|format(bill.subtotal) }}</p>
             <p><strong>Tax ({{ "%.2f"|format(tax) }}%):</strong> ${{ "%.2f"|format(bill.subtotal * tax / 100) }}</p>
             <h4><strong>Total:</strong> ${{ "%.2f"|format(bill.subtotal + (bill.subtotal * tax / 100)) }}</h4>
+            <h5 class="text-danger">Paid: ${{ "%.2f"|format(bill.paid) }}</h5>
         </div>
         <hr>
         <div class="d-flex justify-content-around">

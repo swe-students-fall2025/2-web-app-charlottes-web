@@ -10,6 +10,7 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from app import TAX_RATE, mongo
+from app.payment import PaymentError, demo_payment_provider
 from app.utils.code_generator import generate_code
 from app.utils.decorators import (customer_access_required,
                                   vendor_access_required)
@@ -30,7 +31,6 @@ class OrderItem:
     quantity: int
     bill_id: str
     assigned_to: list = field(default_factory=list)
-    split_type: str = "equal"
     _id: uuid = field(default_factory=lambda: str(uuid.uuid4()))
 
     def to_dict(self):
@@ -42,7 +42,6 @@ class OrderItem:
             "quantity": self.quantity,
             "bill_id": self.bill_id,
             "assigned_to": self.assigned_to or [],
-            "split_type": self.split_type
         }
 
 
@@ -60,8 +59,9 @@ def create_bill():
                 "vendor_id": current_user.id,
                 "table_number": request.form.get("table_number"),
                 "contents": [],
-                "subtotal": 0,
+                "subtotal": 0.0,
                 "status": "pending",
+                "paid": 0.0,
                 "session_code": generate_code(),
                 "created_at": datetime.now(pytz.timezone("US/Eastern"))
             }
@@ -253,3 +253,102 @@ def join_by_code():
     except Exception as e:
         flash(f"An error occurred: {str(e)}", "error")
         return redirect(url_for("customer.dashboard"))
+
+
+@customer_bill_bp.route('/pay_bill_menu/<bill_id>', methods=['GET'])
+@login_required
+@customer_access_required
+def pay_bill_menu(bill_id):
+    '''
+    Open payment page for a customer
+    '''
+
+    payment_methods = mongo.db.users.find_one(
+        {"_id": ObjectId(current_user.id)}
+    )["payment_methods"]
+
+    bill_group = mongo.db.groups.find_one(
+        {'active_bill_id': ObjectId(bill_id)}
+    )
+    if not bill_group or current_user.id not in bill_group["members"]:
+        flash("No active bill found", "error")
+        return redirect(url_for('customer.dashboard'))
+
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    subtotal = 0
+    for item in bill["contents"]:
+        if current_user.id in item["assigned_to"]:
+            subtotal += (
+                item["price"] * item["quantity"] / len(item["assigned_to"])
+            )
+
+    return render_template(
+        "customer/payment_menu.html",
+        tax=TAX_RATE,
+        subtotal=subtotal,
+        bill_id=bill_id,
+        group_id=bill_group["_id"],
+        payment_methods=payment_methods
+    )
+
+
+@customer_bill_bp.route('/pay_bill/<bill_id>', methods=['POST'])
+@login_required
+@customer_access_required
+def pay_bill(bill_id):
+    '''
+    Pay a bill
+    '''
+
+    bill_group = mongo.db.groups.find_one(
+        {'active_bill_id': ObjectId(bill_id)}
+    )
+    if not bill_group or current_user.id not in bill_group["members"]:
+        flash("No active bill found", "error")
+        return redirect(url_for('customer.dashboard'))
+
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    subtotal = 0
+    for item in bill["contents"]:
+        if current_user.id in item["assigned_to"]:
+            subtotal += (
+                item["price"] * item["quantity"] / len(item["assigned_to"])
+            )
+    subtotal *= 1 + TAX_RATE / 100
+
+    try:
+        selection = request.form.get("payment_option")
+        if selection == "new":
+            card = {
+                "card_number": request.form["card_number"],
+                "expiry_date": request.form["expiry_date"],
+                "cardholder_name": request.form["cardholder_name"]
+            }
+            paid = demo_payment_provider.make_payment(
+                card, request.form["cvc"], subtotal
+            )
+        else:
+            card = selection
+            paid = demo_payment_provider.make_payment(
+                card, request.form["cvc-input"], subtotal
+            )
+
+        bill = mongo.db.bills.find_one_and_update(
+            {"_id": ObjectId(bill_id)}, {"$inc": {"paid": paid}},
+            return_document=ReturnDocument.AFTER
+        )
+
+        if bill["paid"] >= bill["subtotal"] * (1 + TAX_RATE / 100):
+            mongo.db.bills.delete_one({"_id": ObjectId(bill_id)})
+            mongo.db.groups.find_one_and_update(
+                {'active_bill_id': ObjectId(bill_id)},
+                {"$set": {"active_bill_id": None}}
+            )
+
+        flash("Payment successful!", "success")
+        return redirect(url_for('customer.dashboard'))
+    except PaymentError as e:
+        flash(str(e), "error")
+        return redirect(
+            url_for('customer_bills.pay_bill_menu', bill_id=bill_id)
+        )

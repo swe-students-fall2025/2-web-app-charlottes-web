@@ -92,6 +92,7 @@ class Bill:
         self.subtotal = bill_data.get('subtotal', 0.0)
         self.status = bill_data.get('status', 'pending')
         self.session_code = bill_data.get('session_code', '')
+        self.paid = bill_data.get('paid', 0)
         # self.estimated_total = bill_data.get('estimated_total', 0.0)
         # self.final_total = bill_data.get('final_total', 0.0)
         self.created_at = bill_data.get(
