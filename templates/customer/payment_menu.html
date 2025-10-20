@@ -68,7 +68,8 @@
         </div>
         <input hidden type="text" value="{{ '%.2f'|format(subtotal * (1 + tax / 100)) }}" name="paid">
         <h5>Amount: ${{ "%.2f"|format(subtotal * (1 + tax / 100)) }}</h5>
-        <a href="{{ url_for('customer.dashboard') }}" class="mb-3 btn btn-secondary w-100">Back</a>
+        <a href="{{ url_for('customer.group_detail', group_id=group_id) }}"
+            class="mb-3 btn btn-secondary w-100">Back</a>
         <button disabled type="submit" id="submitButton" class="btn btn-primary w-100">Confirm Payment</button>
     </form>
 </div>

@@ -29,7 +29,8 @@
                         Table: {{ active_bill.table_number }}<br>
                         Status: <span class="badge bg-warning">{{ active_bill.status }}</span><br>
                         Total: ${{ "%.2f"|format(active_bill.subtotal * (1 + tax / 100)) }}
-                        <div><a href="{{ url_for('customer.display_bill', group_id=group._id) }}"
+                        <br><small class="text-danger">Paid: ${{ "%.2f"|format(active_bill.paid) }}</small>
+                        <div class="mt-1"><a href="{{ url_for('customer.display_bill', group_id=group._id) }}"
                                 class="btn btn-secondary">Split Bill</a></div>
                     </div>
                     {% else %}
@@ -66,7 +67,6 @@
                         class="w-100 px-10 btn btn-success">Pay Your Share
                         (${{ "%.2f"|format(subtotal * (1 + tax / 100)) }})</a>
                 </div>
-                <h5 class="text-danger">Paid: ${{ "%.2f"|format(active_bill.paid) }}</h5>
                 {% endif %}
                 <div class="d-flex mt-3 gap-2 justify-content-evenly">
                     <a href="{{ url_for('customer.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
