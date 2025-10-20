@@ -7,7 +7,7 @@ from flask_login import current_user, login_required
 from pymongo.errors import DuplicateKeyError
 
 from app import TAX_RATE, mongo
-from app.fake_payment import PaymentError, demo_payment_provider
+from app.payment import PaymentError, demo_payment_provider
 from app.utils.code_generator import generate_code
 from app.utils.decorators import customer_access_required
 
