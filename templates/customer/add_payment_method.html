@@ -8,22 +8,26 @@
 
     <form action="{{ url_for('customer.add_payment_method') }}" method="POST" autocomplete="off">
         <label for="cardholder_name">Nickname:</label>
-        <input type="text" id="nickname" name="nickname"><br><br>
+        <input class="form-control w-50" type="text" id="nickname" name="nickname"><br>
 
         <label for="cardholder_name">Cardholder Name:</label>
-        <input type="text" id="cardholder_name" name="cardholder_name" required><br><br>
+        <input class="form-control w-50" type="text" id="cardholder_name" name="cardholder_name" required><br>
 
         <label for="card_number">Card Number:</label>
-        <input type="text" id="card_number" name="card_number" inputmode="numeric" pattern="\d*" maxlength="19"
-            required><br><br>
+        <input class="form-control w-50" type="text" id="card_number" name="card_number" inputmode="numeric"
+            pattern="\d*" minLength="16" maxlength="16" required>
+        <small class="form-text text-muted">16 digit number</small><br><br>
 
         <label for="expiry_date">Expiry Date (Month/Year):</label>
-        <input type="month" id="expiry_date" name="expiry_date" required><br><br>
+        <input class="form-control w-50" type="month" id="expiry_date" name="expiry_date" required><br>
 
         <label for="cvc">CVC:</label>
-        <input type="text" id="cvc" name="cvc" inputmode="numeric" pattern="\d*" maxlength="4" required><br><br>
-
-        <button type="submit">Add Payment Method</button>
+        <input class="form-control w-50" type="text" id="cvc" name="cvc" inputmode="numeric" pattern="\d*" maxlength="3"
+            required>
+        <small class="form-text text-muted">3 digit number on your card</small>
+        <br><br>
+        <button class="btn btn-primary" type="submit">Add Payment Method</button>
+        <a class="text-center ms-1 px-3 btn btn-secondary" href="{{ url_for('customer.dashboard') }}">Back</a>
     </form>
 
 </body>

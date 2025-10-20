@@ -59,12 +59,16 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <h3 class="card-title h5">{{ card.nickname }}</h3>
+                    <form method="POST" action="{{ url_for('customer.delete_payment_method', token=card.token) }}"
+                        onsubmit="return confirm('Are you sure you want to delete this card?');" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm text-white">Delete card</button>
+                    </form>
                 </div>
-                <p class="card-text text-muted mb-2">
-                    <small>Name on card: {{ card.name }}</small>
-                    <small>Card number: {{ "*"*12, card.last_four }}</small>
-                    <small>Expiry date: {{ card.expiry_date }}</small>
-                </p>
+                <div class="card-text text-muted mb-2">
+                    <small>Card number: {{ "*"*12 }}{{ card.last_four }}</small><br>
+                    <small>Name on card: {{ card.cardholder_name }}</small><br>
+                    <small>Expiry date: {{ card.expiry_date }}</small><br>
+                </div>
             </div>
         </div>
         {% endfor %}
