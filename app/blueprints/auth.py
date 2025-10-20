@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
-from flask_login import login_user, logout_user, current_user, login_required
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required, login_user, logout_user
+
 from app import mongo
 from app.models import User
 
@@ -80,7 +81,10 @@ def signup():
             return redirect(url_for('auth.signup'))
 
         # Create user
-        vendor_name = request.form.get('vendor_name', '') if user_type == 'vendor' else ''
+        vendor_name = (
+            request.form.get('vendor_name', '')
+            if user_type == 'vendor' else ''
+        )
         user_dict = User.create_user_dict(
             username=username,
             email=email,
@@ -97,7 +101,9 @@ def signup():
         user = User(user_data)
         login_user(user)
 
-        flash(f'Welcome, {username}! Your account has been created.', 'success')
+        flash(
+            f'Welcome, {username}! Your account has been created.', 'success'
+        )
 
         return redirect(url_for('index'))
 

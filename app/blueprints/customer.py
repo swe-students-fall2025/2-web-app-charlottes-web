@@ -1,15 +1,35 @@
+from dataclasses import dataclass
+
 from bson.objectid import ObjectId
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from pymongo.errors import DuplicateKeyError
 
-from app import mongo
+from app import TAX_RATE, mongo
+from app.fake_payment import PaymentError, demo_payment_provider
 from app.utils.code_generator import generate_code
+from app.utils.decorators import customer_access_required
 
 customer_bp = Blueprint('customer', __name__, url_prefix='/customer')
 
 
+@dataclass
+class PaymentMethod:
+    nickname: str
+    token: str
+    last_four: str
+
+    def to_dict(self):
+        return {
+            "nickname": self.nickname,
+            "token": self.token,
+            "last_four": self.last_four,
+        }
+
+
 @customer_bp.route('/dashboard')
+@login_required
+@customer_access_required
 def dashboard():
     '''
     shows user's groups
@@ -26,6 +46,7 @@ def dashboard():
 
 @customer_bp.route('/group/create', methods=['GET', 'POST'])
 @login_required
+@customer_access_required
 def create_group():
     '''
     Create a new group
@@ -67,6 +88,7 @@ def create_group():
 
 @customer_bp.route('/group/join', methods=['GET', 'POST'])
 @login_required
+@customer_access_required
 def join_group():
     '''
     Join an existing group by group ID
@@ -117,6 +139,7 @@ def join_group():
 
 @customer_bp.route('/group/<group_id>')
 @login_required
+@customer_access_required
 def group_detail(group_id):
     '''
     Show group details including members and active bill
@@ -161,6 +184,7 @@ def group_detail(group_id):
 
 @customer_bp.route('/group/<group_id>/leave', methods=['POST'])
 @login_required
+@customer_access_required
 def leave_group(group_id):
     '''
     Leave a group
@@ -211,6 +235,7 @@ def leave_group(group_id):
 
 @customer_bp.route('/bill/display/<group_id>')
 @login_required
+@customer_access_required
 def display_bill(group_id):
     """
     Display the current active bill for a given group.
@@ -241,7 +266,8 @@ def display_bill(group_id):
     for item in items:
         assigned = item.get("assigned_to", []) or []
         item["assigned_user_objects"] = [
-            mongo.db.users.find_one({"_id": ObjectId(uid)}) for uid in assigned if uid
+            mongo.db.users.find_one({"_id": ObjectId(uid)})
+            for uid in assigned if uid
         ]
 
     return render_template(
@@ -249,7 +275,8 @@ def display_bill(group_id):
         bill=bill,
         group=group,
         items=items,
-        group_members=group_members
+        group_members=group_members,
+        tax=TAX_RATE
     )
 
 @customer_bp.route('/bill/split/<group_id>/<item_id>/<user_id>', methods=['POST'])
@@ -298,3 +325,31 @@ def split_bill(group_id, item_id, user_id):
     
     return redirect(url_for("customer.display_bill", group_id=group_id))
 
+
+
+@customer_bp.route('/add_payment', methods=['POST'])
+@login_required
+@customer_access_required
+def add_payment_method():
+    '''
+    Add a saved payment method for the consumer
+    '''
+
+    try:
+        card_token = demo_payment_provider.register(request.form)
+    except (ValueError, PaymentError) as e:
+        flash(str(e), "error")
+        return redirect(url_for("customer.dashboard"))
+
+    new_card = PaymentMethod(
+        nickname=request.form.get("nickname", "Untitled card"),
+        token=card_token,
+        last_four=request.form["card_number"][-4:]
+    )
+
+    mongo.db.users.find_one_and_update(
+        {"_id": current_user.id},
+        {"$push": {"payment_methods": new_card.to_dict()}}
+    )
+
+    return redirect(url_for("customer.dashboard"))

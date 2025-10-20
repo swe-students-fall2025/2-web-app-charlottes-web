@@ -11,7 +11,8 @@ from pymongo.errors import DuplicateKeyError
 
 from app import TAX_RATE, mongo
 from app.utils.code_generator import generate_code
-from app.utils.decorators import vendor_access_required
+from app.utils.decorators import (customer_access_required,
+                                  vendor_access_required)
 
 vendor_bill_bp = Blueprint(
     'vendor_bills', f"vendor_{__name__}", url_prefix='/vendor/bill'
@@ -201,6 +202,7 @@ def delete(bill_id):
 
 @customer_bill_bp.route('/join-by-code', methods=['POST'])
 @login_required
+@customer_access_required
 def join_by_code():
     '''
     Customer joins a bill using payment code and attaches their group to it.
@@ -216,8 +218,14 @@ def join_by_code():
         # Find bill by session_code
         bill = mongo.db.bills.find_one({"session_code": session_code})
         if not bill:
-            flash(f"Payment code '{session_code}' not found. Please check and try again.", "error")
-            return redirect(url_for("customer.group_detail", group_id=group_id))
+            flash(
+                f"Payment code '{session_code}' not found."
+                " Please check and try again.",
+                "error"
+            )
+            return redirect(url_for(
+                "customer.group_detail", group_id=group_id
+            ))
 
         # Verify group exists and user is a member
         group = mongo.db.groups.find_one({"_id": ObjectId(group_id)})
@@ -235,7 +243,11 @@ def join_by_code():
             {"$set": {"active_bill_id": ObjectId(bill['_id'])}}
         )
 
-        flash(f'Group "{group["name"]}" joined Bill (Code: {session_code}) successfully!', "success")
+        flash(
+            f'Group "{group["name"]}" joined Bill '
+            '(Code: {session_code}) successfully!',
+            "success"
+        )
         return redirect(url_for('customer.display_bill', group_id=group_id))
 
     except Exception as e:
