@@ -345,7 +345,6 @@ def add_payment_method():
     '''
     Add a saved payment method for the consumer
     '''
-
     try:
         card_token = demo_payment_provider.register(request.form)
     except (ValueError, PaymentError) as e:
@@ -368,8 +367,26 @@ def add_payment_method():
     return redirect(url_for("customer.dashboard"))
 
 
-@customer_bp.route('/add_payment', methods=['GET'])
+@customer_bp.route('/add_payment_form', methods=['GET'])
 @login_required
 @customer_access_required
 def add_payment_method_form():
     return render_template("customer/add_payment_method.html")
+
+
+@customer_bp.route('/delete_payment_method/<token>', methods=['POST'])
+@login_required
+@customer_access_required
+def delete_payment_method(token):
+    '''
+    Delete a payment method
+    '''
+
+    mongo.db.users.find_one_and_update(
+        {"_id": ObjectId(current_user.id)},
+        {"$pull": {"payment_methods": {"token": token}}}
+    )
+
+    demo_payment_provider.delete_card(token)
+
+    return redirect(url_for("customer.dashboard"))

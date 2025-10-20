@@ -59,6 +59,12 @@ class PaymentProvider:
         except PaymentError:
             raise
 
+    def delete_card(self, token):
+        '''
+        Simulate deleting a saved card from card network
+        '''
+        self.card_network.delete_token(token)
+
 
 class CardNetwork:
     def check_cvc(*args):
@@ -77,6 +83,12 @@ class CardNetwork:
             mongo.db.cards.insert_one(card.to_dict())
         else:
             raise PaymentError("Invalid cvc")
+
+    def delete_token(self, token):
+        '''
+        Simulate deleting a saved card
+        '''
+        mongo.db.cards.delete_one({"token": token})
 
 
 demo_card_network = CardNetwork()
