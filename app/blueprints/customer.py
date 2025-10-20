@@ -268,6 +268,15 @@ def split_bill(group_id, item_id, user_id):
     if current_user.user_type != 'customer':
         flash('Access denied. Customer account required.', 'error')
         return redirect(url_for('vendor.dashboard'))
+    
+    if current_user.id not in group.get("members", []):
+        flash("You are not a member of this group.", "error")
+        return redirect(url_for("customer.dashboard"))
+
+    if user_id not in group.get("members", []):
+        flash("Target user is not a member of this group.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
     group = mongo.db.groups.find_one({"_id" : ObjectId(group_id)})
     if not group:
         flash("Group not found.", "error")
