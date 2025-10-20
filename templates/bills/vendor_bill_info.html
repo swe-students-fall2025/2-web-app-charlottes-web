@@ -8,10 +8,28 @@
 <div class="container mt-5">
     <h1 class="text-center mb-4">Bill Information</h1>
 
+    <div class="row mb-4">
+        <!-- Session Code Alert -->
+        <div class="col-lg-12">
+            <div class="alert alert-success d-flex align-items-center" role="alert">
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading mb-2">
+                        Share Payment Code
+                    </h5>
+                    <p class="mb-1">
+                        <strong>Code: {{ bill.session_code }}</strong>
+                    </p>
+                    <small>Customers enter this code to pay for this bill.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card p-4 mb-5">
         <h2 class="text-center mb-3">Table {{ bill.table_number }}</h2>
-        <p><strong>Bill ID:</strong> {{ bill._id }}</p>
+        <!-- <p><strong>Bill ID:</strong> {{ bill._id }}</p> -->
         <p><strong>Date:</strong> {{ bill.created_at.date()}}</p>
+        <p><strong>Payment Code:</strong> {{ bill.session_code }}</p>
         <hr>
 
         <h3 class="mt-4 mb-3">Items Ordered</h3>
@@ -58,4 +76,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    function copySessionCode() {
+        const code = "{{ bill.session_code }}";
+        navigator.clipboard.writeText(code).then(function () {
+            alert('Payment code copied to clipboard: ' + code);
+        }).catch(function (err) {
+            alert('Failed to copy payment code');
+        });
+    }
+</script>
+
 {% endblock %}

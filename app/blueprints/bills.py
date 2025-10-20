@@ -1,9 +1,6 @@
-import random
-import string
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 import pytz
 from bson import ObjectId
@@ -12,7 +9,9 @@ from flask_login import current_user, login_required
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from app import CODE_LENGTH, TAX_RATE, mongo
+from app import TAX_RATE, mongo
+from app.utils.code_generator import generate_code
+from app.utils.decorators import vendor_access_required
 
 vendor_bill_bp = Blueprint(
     'vendor_bills', f"vendor_{__name__}", url_prefix='/vendor/bill'
@@ -29,7 +28,7 @@ class OrderItem:
     price: float
     quantity: int
     bill_id: str
-    assigned_to: Optional[str] = None
+    assigned_to: list = field(default_factory=list)
     split_type: str = "equal"
     _id: uuid = field(default_factory=lambda: str(uuid.uuid4()))
 
@@ -41,20 +40,18 @@ class OrderItem:
             "price": self.price,
             "quantity": self.quantity,
             "bill_id": self.bill_id,
-            "assigned_to": self.assigned_to,
+            "assigned_to": self.assigned_to or [],
             "split_type": self.split_type
         }
 
 
 @vendor_bill_bp.route('/create', methods=['POST'])
 @login_required
+@vendor_access_required
 def create_bill():
     '''
     Create a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash("Access denied.", "error")
-        return redirect(url_for("customer.dashboard"))
     mongo.db.bills.create_index([("session_code", 1)], unique=True)
     while True:
         try:
@@ -77,22 +74,12 @@ def create_bill():
     )
 
 
-def generate_code():
-    return "".join(
-        random.choices(string.ascii_uppercase + string.digits, k=CODE_LENGTH)
-    )
-
-
 @vendor_bill_bp.route('/detail/<bill_id>', methods=['GET'])
 @login_required
 def display_bill(bill_id):
     '''
     Display information for a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash("Access denied.", "error")
-        return redirect(url_for("customer.dashboard"))
-
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
@@ -107,13 +94,11 @@ def display_bill(bill_id):
 
 @vendor_bill_bp.route('/add_menu/<bill_id>', methods=['GET'])
 @login_required
+@vendor_access_required
 def view_menu_for_bill(bill_id):
     '''
     Render menu to add items to a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
@@ -129,13 +114,11 @@ def view_menu_for_bill(bill_id):
 
 @vendor_bill_bp.route('/add/<bill_id>/<item_id>', methods=['POST'])
 @login_required
+@vendor_access_required
 def add_to_bill(bill_id, item_id):
     '''
     Add a menu item to a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
@@ -163,15 +146,14 @@ def add_to_bill(bill_id, item_id):
 
     return redirect(url_for("vendor_bills.display_bill", bill_id=bill["_id"]))
 
+
 @vendor_bill_bp.route('/delete_from_bill/<bill_id>/<item_id>')
 @login_required
+@vendor_access_required
 def delete_from_bill(bill_id, item_id):
     '''
     Delete a specified item from a bill
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
@@ -197,34 +179,65 @@ def delete_from_bill(bill_id, item_id):
 
 @vendor_bill_bp.route('/delete/<bill_id>')
 @login_required
+@vendor_access_required
 def delete(bill_id):
     '''
-    Delete a bill
+    Delete a bill and remove it from any groups' active_bill_id
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     if not bill or bill["vendor_id"] != current_user.id:
         flash("Bill not found.", "error")
         return redirect(url_for("vendor.dashboard"))
 
+    # Remove this bill from any groups that have it as active_bill_id
+    mongo.db.groups.update_many(
+        {"active_bill_id": ObjectId(bill_id)},
+        {"$set": {"active_bill_id": None}}
+    )
+
     mongo.db.bills.delete_one({"_id": ObjectId(bill_id)})
     return redirect(url_for("vendor.dashboard"))
-    
-@vendor_bill_bp.route('/addgroup/<bill_id>/<group_id>')
+
+
+@customer_bill_bp.route('/join-by-code', methods=['POST'])
 @login_required
-def addgroup(bill_id, group_id):
+def join_by_code():
     '''
-    Add a group associated with bill
+    Customer joins a bill using payment code and attaches their group to it.
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
-    
-    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
-    if not bill or bill["vendor_id"] != current_user.id:
-        flash("Bill not found.", "error")
-        return redirect(url_for("vendor.dashboard"))
-    
-    # TODO: call attach_group_to_bill() somehow?
+    try:
+        session_code = request.form.get('session_code', '').strip().upper()
+        group_id = request.form.get('group_id', '').strip()
+
+        if not session_code or not group_id:
+            flash("Missing payment code or group ID.", "error")
+            return redirect(url_for("customer.dashboard"))
+
+        # Find bill by session_code
+        bill = mongo.db.bills.find_one({"session_code": session_code})
+        if not bill:
+            flash(f"Payment code '{session_code}' not found. Please check and try again.", "error")
+            return redirect(url_for("customer.group_detail", group_id=group_id))
+
+        # Verify group exists and user is a member
+        group = mongo.db.groups.find_one({"_id": ObjectId(group_id)})
+        if not group:
+            flash("Group not found.", "error")
+            return redirect(url_for("customer.dashboard"))
+
+        if current_user.id not in group.get('members', []):
+            flash("You are not a member of this group.", "error")
+            return redirect(url_for("customer.dashboard"))
+
+        # Attach group to bill
+        mongo.db.groups.update_one(
+            {"_id": ObjectId(group_id)},
+            {"$set": {"active_bill_id": ObjectId(bill['_id'])}}
+        )
+
+        flash(f'Group "{group["name"]}" joined Bill (Code: {session_code}) successfully!', "success")
+        return redirect(url_for('customer.display_bill', group_id=group_id))
+
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "error")
+        return redirect(url_for("customer.dashboard"))

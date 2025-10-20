@@ -5,6 +5,7 @@ from app.models import User
 
 auth_bp = Blueprint('auth', __name__)
 
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     '''
@@ -40,13 +41,10 @@ def login():
         login_user(user)
         flash(f'Welcome back, {user.username}!', 'success')
 
-        # Redirect based on user type
-        if user.user_type == 'vendor':
-            return redirect(url_for('vendor.dashboard'))
-        else:
-            return redirect(url_for('customer.dashboard'))
+        return redirect(url_for('index'))
 
     return render_template('login.html', title='Login')
+
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -54,7 +52,7 @@ def signup():
     Signup page
     '''
     if current_user.is_authenticated:
-        return redirect(url_for('customer.dashboard'))
+        return redirect(url_for('index'))
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -101,12 +99,10 @@ def signup():
 
         flash(f'Welcome, {username}! Your account has been created.', 'success')
 
-        if user_type == 'vendor':
-            return redirect(url_for('vendor.dashboard'))
-        else:
-            return redirect(url_for('customer.dashboard'))
+        return redirect(url_for('index'))
 
     return render_template('signup.html', title='Sign Up')
+
 
 @auth_bp.route('/logout')
 @login_required

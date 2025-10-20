@@ -56,6 +56,11 @@ class User(UserMixin):
 class Group:
     '''
     Group model
+
+    Relationships:
+    - group.creator_id -> links to Customer (User with user_type='customer')
+    - group.members -> list of Customer IDs (user_type='customer')
+    - group.active_bill_id -> links to Bill (created by a vendor)
     '''
     def __init__(self, group_data):
         self.id = str(group_data.get('_id', ''))
@@ -74,11 +79,14 @@ class Group:
 class Bill:
     '''
     Bill model
+
+    Relationships:
+    - bill.vendor_id -> links to Vendor (User with user_type='vendor')
+    - Group.active_bill_id -> links to this Bill (uni-directional)
     '''
     def __init__(self, bill_data):
         self.id = str(bill_data.get('_id', ''))
         self.vendor_id = str(bill_data.get('vendor_id', ''))
-        self.group_id = str(bill_data.get('group_id', ''))
         self.table_number = str(bill_data.get('table_number', ''))
         self.contents = bill_data.get('contents', [])
         self.subtotal = bill_data.get('subtotal', 0.0)
@@ -106,37 +114,3 @@ class Payment:
         self.items_paid = payment_data.get('items_paid', [])
         # self.created_at = payment_data.get('created_at', datetime.utcnow())
         self.completed_at = payment_data.get('completed_at', None)
-
-        # self.authorization_hold = payment_data.get(
-        #     'authorization_hold', None
-        # )
-        # self.planned_amount = payment_data.get('planned_amount', 0.0)
-        # self.captured_amount = payment_data.get('captured_amount', 0.0)
-        # self.hold_status = payment_data.get('hold_status', None)
-
-
-# Better defined in blueprints/bills.py
-class OrderItem:
-    '''
-    individually ordered items
-    '''
-    def __init__(self, item_data):
-        self.id = str(item_data.get('_id', ''))
-        self.bill_id = str(item_data.get('bill_id', ''))
-        self.name = item_data.get('name', '')
-        self.price = item_data.get('price', 0.0)
-        self.quantity = item_data.get('quantity', 1)
-        self.assigned_to = item_data.get('assigned_to', [])  # user_ids
-        self.split_type = item_data.get('split_type', 'equal')
-
-    def to_dict(self):
-        return {
-            "_id": self._id,
-            "item_id": self.item_id,
-            "name": self.name,
-            "price": self.price,
-            "quantity": self.quantity,
-            "bill_id": self.bill_id,
-            "assigned_to": self.assigned_to,
-            "split_type": self.split_type
-        }
