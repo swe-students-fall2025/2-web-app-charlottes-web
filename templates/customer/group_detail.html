@@ -25,7 +25,7 @@
                     <h5>Active Bill</h5>
                     {% if active_bill %}
                     <div class="alert alert-info">
-                        <strong>Bill #{{ active_bill._id }}</strong><br>
+                        <strong>Bill Code:</strong> <span class="fw-bold">{{ active_bill.session_code }}</span><br>
                         Table: {{ active_bill.table_number }}<br>
                         Status: <span class="badge bg-warning">{{ active_bill.status }}</span><br>
                         Total: ${{ "%.2f"|format(active_bill.subtotal) }}
@@ -78,6 +78,22 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    {% if not active_bill %}
+                    <!-- Join Bill by Code -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Join a Bill</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="billCodeInput"
+                                   placeholder="Enter payment code" maxlength="20">
+                            <button class="btn btn-success" type="button" onclick="joinBillWithCode('{{ group._id }}')">
+                                <i class="fa fa-arrow-right"></i> Join
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-1">Ask vendor for the payment code</small>
+                    </div>
+                    <hr>
+                    {% endif %}
+
                     {% if is_creator %}
                     <a href="#" class="btn btn-outline-primary">
                         Manage members
@@ -105,6 +121,35 @@
         }, function (err) {
             alert('Failed to copy Group ID');
         });
+    }
+
+    function joinBillWithCode(groupId) {
+        const billCode = document.getElementById('billCodeInput').value.trim().toUpperCase();
+
+        if (!billCode) {
+            alert('Please enter a payment code');
+            return;
+        }
+
+        // Create a temporary form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/customer/bill/join-by-code`;
+
+        const codeInput = document.createElement('input');
+        codeInput.type = 'hidden';
+        codeInput.name = 'session_code';
+        codeInput.value = billCode;
+
+        const groupInput = document.createElement('input');
+        groupInput.type = 'hidden';
+        groupInput.name = 'group_id';
+        groupInput.value = groupId;
+
+        form.appendChild(codeInput);
+        form.appendChild(groupInput);
+        document.body.appendChild(form);
+        form.submit();
     }
 </script>
 
