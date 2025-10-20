@@ -66,6 +66,7 @@
                         class="w-100 px-10 btn btn-success">Pay Your Share
                         (${{ "%.2f"|format(subtotal * (1 + tax / 100)) }})</a>
                 </div>
+                <h5 class="text-danger">Paid: ${{ "%.2f"|format(active_bill.paid) }}</h5>
                 {% endif %}
                 <div class="d-flex mt-3 gap-2 justify-content-evenly">
                     <a href="{{ url_for('customer.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
@@ -86,7 +87,6 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    {% if not active_bill %}
                     <!-- Join Bill by Code -->
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Join a Bill</label>
@@ -100,7 +100,6 @@
                         <small class="text-muted d-block mt-1">Ask vendor for the payment code</small>
                     </div>
                     <hr>
-                    {% endif %}
                 </div>
             </div>
         </div>
