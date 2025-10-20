@@ -245,26 +245,116 @@ def leave_group(group_id):
         return redirect(url_for('customer.dashboard'))
 
 
+# @customer_bp.route('/bill/display/<group_id>')
+# @login_required
+# def display_bill(group_id):
+#     """
+#     Display the current active bill for a given group.
+
+#     """
+#     if current_user.user_type != 'customer':
+#         flash('Access denied. Customer account required.', 'error')
+#         return redirect(url_for('vendor.dashboard'))
+
+#     group = mongo.db.groups.find_one({"_id": ObjectId(group_id)})
+#     if not group:
+#         flash("Group not found.", "error")
+#         return redirect(url_for("customer.dashboard"))
+
+#     bill_id = group.get("active_bill_id")
+#     if not bill_id:
+#         flash("No active bill for this group.", "error")
+#         return redirect(url_for("customer.dashboard"))
+
+#     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+#     if not bill:
+#         flash("Bill not found.", "error")
+#         return redirect(url_for("customer.dashboard"))
+
+#     items = bill.get("contents", [])
+#     group_members = group.get("members", [])
+
+#     for item in items:
+#         assigned = item.get("assigned_to", []) or []
+#         item["assigned_user_objects"] = [
+#             mongo.db.users.find_one({"_id": ObjectId(uid)}) for uid in assigned if uid
+#         ]
+
+#     return render_template(
+#         "customer/customer_bill.html",
+#         bill=bill,
+#         group=group,
+#         items=items,
+#         group_members=group_members
+#     )
+
 @customer_bp.route('/bill/display/<group_id>')
 @login_required
 @customer_access_required
 def display_bill(group_id):
-    """
-    Display the current active bill for a given group.
-
-    """
     if current_user.user_type != 'customer':
         flash('Access denied. Customer account required.', 'error')
         return redirect(url_for('vendor.dashboard'))
+    
+    group = mongo.db.groups.find_one({"_id" : ObjectId(group_id)})
+    if not group:
+        flash("Group not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
+    if current_user.id not in group.get("members", []):
+        flash("You are not a member of this group.", "error")
+        return redirect(url_for("customer.dashboard"))
+
+    # if user_id not in group.get("members", []):
+    #     flash("Target user is not a member of this group.", "error")
+    #     return redirect(url_for("customer.dashboard"))
+    
+    bill = mongo.db.bills.find_one({"_id": ObjectId(group.get("active_bill_id"))})
+    if not bill:
+        flash("Bill not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+    return render_template("customer/display_bill.html", bill=bill, tax=TAX_RATE, group=group)
+
+@customer_bp.route('/bill/split_interface/<group_id>/<bill_id>/<item_id>', methods=['GET'])
+@login_required
+def show_split_interface(group_id, bill_id, item_id):
+    group = mongo.db.groups.find_one({"_id": ObjectId(group_id)})
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+
+    if not group or not bill:
+        flash("Invalid group or bill.", "error")
+        return redirect(url_for("customer.dashboard"))
+
+    # Find the target item
+    target_item = next((it for it in bill.get("contents", []) if str(it["_id"]) == str(item_id)), None)
+    if not target_item:
+        flash("Item not found.", "error")
+        return redirect(url_for("customer.display_bill", group_id=group_id))
+
+    assigned_users = []
+    for id in target_item.get("assigned_to", []):
+        assigned_users.append(mongo.db.users.find_one({"_id": ObjectId(id)}))
+    
+    # Load group members for display
+    members = list(mongo.db.users.find({"_id": {"$in": [ObjectId(uid) for uid in group["members"]]}}))
+
+    return render_template(
+        "customer/split_bill.html",
+        group=group,
+        bill=bill,
+        item=target_item,
+        members=members,
+        assigned_users=assigned_users
+    )
+
+@customer_bp.route('/bill/split/<group_id>/<bill_id>/<item_id>', methods=['POST'])
+@login_required
+def split_bill(group_id, bill_id, item_id):
+    user_ids = request.form.getlist("user_ids")
 
     group = mongo.db.groups.find_one({"_id": ObjectId(group_id)})
     if not group:
         flash("Group not found.", "error")
-        return redirect(url_for("customer.dashboard"))
-
-    bill_id = group.get("active_bill_id")
-    if not bill_id:
-        flash("No active bill for this group.", "error")
         return redirect(url_for("customer.dashboard"))
 
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
@@ -272,75 +362,17 @@ def display_bill(group_id):
         flash("Bill not found.", "error")
         return redirect(url_for("customer.dashboard"))
 
-    items = bill.get("contents", [])
-    group_members = group.get("members", [])
+    # Verify all selected users belong to this group
+    for uid in user_ids:
+        if uid not in group["members"]:
+            flash("One or more selected users are not in this group.", "error")
+            return redirect(url_for("customer.display_bill", group_id=group_id))
 
-    for item in items:
-        assigned = item.get("assigned_to", []) or []
-        item["assigned_user_objects"] = [
-            mongo.db.users.find_one({"_id": ObjectId(uid)})
-            for uid in assigned if uid
-        ]
-
-    return render_template(
-        "customer/customer_bill.html",
-        bill=bill,
-        group=group,
-        items=items,
-        group_members=group_members,
-        tax=TAX_RATE
+    # Update the bill’s item to assign all selected members
+    mongo.db.bills.update_one(
+        {"_id": ObjectId(bill_id), "contents._id": item_id},
+        {"$set": {"contents.$.assigned_to": user_ids}}
     )
 
-
-@customer_bp.route('/add_payment_method', methods=['POST'])
-@login_required
-@customer_access_required
-def add_payment_method():
-    '''
-    Add a saved payment method for the consumer
-    '''
-    try:
-        card_token = demo_payment_provider.register(request.form)
-    except (ValueError, PaymentError) as e:
-        flash(str(e), "error")
-        return redirect(url_for("customer.dashboard"))
-
-    new_card = PaymentMethod(
-        nickname=request.form.get("nickname", "Untitled card"),
-        token=card_token,
-        last_four=request.form["card_number"][-4:],
-        expiry_date=request.form["expiry_date"],
-        cardholder_name=request.form["cardholder_name"]
-    )
-
-    mongo.db.users.find_one_and_update(
-        {"_id": ObjectId(current_user.id)},
-        {"$push": {"payment_methods": new_card.to_dict()}}
-    )
-
-    return redirect(url_for("customer.dashboard"))
-
-
-@customer_bp.route('/add_payment_form', methods=['GET'])
-@login_required
-@customer_access_required
-def add_payment_method_form():
-    return render_template("customer/add_payment_method.html")
-
-
-@customer_bp.route('/delete_payment_method/<token>', methods=['POST'])
-@login_required
-@customer_access_required
-def delete_payment_method(token):
-    '''
-    Delete a payment method
-    '''
-
-    mongo.db.users.find_one_and_update(
-        {"_id": ObjectId(current_user.id)},
-        {"$pull": {"payment_methods": {"token": token}}}
-    )
-
-    demo_payment_provider.delete_card(token)
-
-    return redirect(url_for("customer.dashboard"))
+    flash("Bill successfully split among selected members!", "success")
+    return redirect(url_for("customer.display_bill", group_id=group_id))
