@@ -376,3 +376,57 @@ def split_bill(group_id, bill_id, item_id):
 
     flash("Bill successfully split among selected members!", "success")
     return redirect(url_for("customer.display_bill", group_id=group_id))
+
+
+@customer_bp.route('/add_payment_method', methods=['POST'])
+@login_required
+@customer_access_required
+def add_payment_method():
+    '''
+    Add a saved payment method for the consumer
+    '''
+    try:
+        card_token = demo_payment_provider.register(request.form)
+    except (ValueError, PaymentError) as e:
+        flash(str(e), "error")
+        return redirect(url_for("customer.dashboard"))
+
+    new_card = PaymentMethod(
+        nickname=request.form.get("nickname", "Untitled card"),
+        token=card_token,
+        last_four=request.form["card_number"][-4:],
+        expiry_date=request.form["expiry_date"],
+        cardholder_name=request.form["cardholder_name"]
+    )
+
+    mongo.db.users.find_one_and_update(
+        {"_id": ObjectId(current_user.id)},
+        {"$push": {"payment_methods": new_card.to_dict()}}
+    )
+
+    return redirect(url_for("customer.dashboard"))
+
+
+@customer_bp.route('/add_payment_form', methods=['GET'])
+@login_required
+@customer_access_required
+def add_payment_method_form():
+    return render_template("customer/add_payment_method.html")
+
+
+@customer_bp.route('/delete_payment_method/<token>', methods=['POST'])
+@login_required
+@customer_access_required
+def delete_payment_method(token):
+    '''
+    Delete a payment method
+    '''
+
+    mongo.db.users.find_one_and_update(
+        {"_id": ObjectId(current_user.id)},
+        {"$pull": {"payment_methods": {"token": token}}}
+    )
+
+    demo_payment_provider.delete_card(token)
+
+    return redirect(url_for("customer.dashboard"))
