@@ -29,7 +29,7 @@
                         Table: {{ active_bill.table_number }}<br>
                         Status: <span class="badge bg-warning">{{ active_bill.status }}</span><br>
                         Total: ${{ "%.2f"|format(active_bill.subtotal * (1 + tax / 100)) }}
-                        <div><a href="{{ url_for('customer.pay_bill', bill_id=active_bill._id) }}"
+                        <div><a href="{{ url_for('customer.display_bill', group_id=group._id) }}"
                                 class="btn btn-secondary">Split Bill</a></div>
                     </div>
                     {% else %}
@@ -61,7 +61,8 @@
 
                 <!-- Actions -->
                 <div class="d-flex justify-content-center w-100">
-                    <a href="{{ url_for('customer.dashboard') }}" class="w-100 px-10 btn btn-success">Pay Your Share
+                    <a href="{{ url_for('customer.pay_bill_menu', bill_id=active_bill._id) }}"
+                        class="w-100 px-10 btn btn-success">Pay Your Share
                         ($xx.xx)</a>
                 </div>
                 <div class="d-flex mt-3 gap-2 justify-content-evenly">

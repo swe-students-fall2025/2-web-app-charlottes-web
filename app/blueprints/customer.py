@@ -155,43 +155,43 @@ def group_detail(group_id):
     '''
     Show group details including members and active bill
     '''
-    try:
+    # try:
         # Find the group
-        group = mongo.db.groups.find_one({'_id': ObjectId(group_id)})
+    group = mongo.db.groups.find_one({'_id': ObjectId(group_id)})
 
-        if not group:
-            flash('Group not found.', 'error')
-            return redirect(url_for('customer.dashboard'))
-
-        # Check if current user is a member
-        if current_user.id not in group.get('members', []):
-            flash('You are not a member of this group.', 'error')
-            return redirect(url_for('customer.dashboard'))
-
-        # Get member details
-        member_ids = [ObjectId(m) for m in group.get('members', [])]
-        members = list(mongo.db.users.find({'_id': {'$in': member_ids}}))
-
-        # Get active bill if exists
-        active_bill = None
-        if group.get('active_bill_id'):
-            active_bill = mongo.db.bills.find_one(
-                {'_id': ObjectId(group['active_bill_id'])}
-            )
-
-        return render_template('customer/group_detail.html',
-                               title=group['name'],
-                               group=group,
-                               members=members,
-                               active_bill=active_bill,
-                               is_creator=(
-                                   current_user.id == group['creator_id']
-                               ),
-                               tax=TAX_RATE)
-
-    except Exception:
-        flash('Invalid group ID.', 'error')
+    if not group:
+        flash('Group not found.', 'error')
         return redirect(url_for('customer.dashboard'))
+
+    # Check if current user is a member
+    if current_user.id not in group.get('members', []):
+        flash('You are not a member of this group.', 'error')
+        return redirect(url_for('customer.dashboard'))
+
+    # Get member details
+    member_ids = [ObjectId(m) for m in group.get('members', [])]
+    members = list(mongo.db.users.find({'_id': {'$in': member_ids}}))
+
+    # Get active bill if exists
+    active_bill = None
+    if group.get('active_bill_id'):
+        active_bill = mongo.db.bills.find_one(
+            {'_id': ObjectId(group['active_bill_id'])}
+        )
+
+    return render_template('customer/group_detail.html',
+                            title=group['name'],
+                            group=group,
+                            members=members,
+                            active_bill=active_bill,
+                            is_creator=(
+                                current_user.id == group['creator_id']
+                            ),
+                            tax=TAX_RATE)
+
+    # except Exception:
+    #     flash('Invalid group ID.', 'error')
+    #     return redirect(url_for('customer.dashboard'))
 
 
 @customer_bp.route('/group/<group_id>/leave', methods=['POST'])
@@ -412,3 +412,39 @@ def delete_payment_method(token):
     demo_payment_provider.delete_card(token)
 
     return redirect(url_for("customer.dashboard"))
+
+
+@customer_bp.route('/pay_bill_menu/<bill_id>', methods=['GET'])
+@login_required
+@customer_access_required
+def pay_bill_menu(bill_id):
+    '''
+    Open payment page for a customer
+    '''
+
+    bill_group = mongo.db.groups.find_one({'active_bill_id': ObjectId(bill_id)})
+    if not bill_group or current_user.id not in bill_group["members"]:
+        flash("No active bill found", "error")
+
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    subtotal = 0
+    for item in bill["contents"]:
+        if current_user.id in item["assigned_to"]:
+            subtotal += (
+                item["price"] * item["quantity"] / len(item["assigned_to"])
+            )
+
+    payment_methods = mongo.db.users.find_one({"_id": ObjectId(current_user.id)})["payment_methods"]
+
+    return render_template(
+        "customer/payment_menu.html",
+        tax=TAX_RATE,
+        subtotal=subtotal,
+        bill_id=bill_id,
+        payment_methods=payment_methods
+    )
+
+
+@customer_bp.route('/pay_bill/<bill_id>')
+def pay_bill(bill_id):
+    return bill_id
