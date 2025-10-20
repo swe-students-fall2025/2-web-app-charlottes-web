@@ -15,7 +15,7 @@
         <!-- Nav bar -->
         <nav class="navbar navbar-dark bg-dark sticky-top">
             <div class="container-fluid">
-                <a href="{{ url_for('index') }}" class="navbar-brand">[APP NAME]</a>
+                <a href="{{ url_for('index') }}" class="navbar-brand">Billie</a>
                 <div class="d-flex">
                     {% if current_user.is_authenticated %}
                     {% if current_user.user_type == 'vendor' %}
