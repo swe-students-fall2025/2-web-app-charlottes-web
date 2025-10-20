@@ -3,21 +3,18 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import TAX_RATE, mongo
+from app.utils.decorators import vendor_access_required
 
 vendor_bp = Blueprint('vendor', __name__, url_prefix='/vendor')
 
 
 @vendor_bp.route('/dashboard')
 @login_required
+@vendor_access_required
 def dashboard():
     '''
     Vendor dashboard - shows active bills and menu items
     '''
-    # Check if user is a vendor
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
-
     # Get vendor's active bills
     active_bills = list(mongo.db.bills.find({
         'vendor_id': current_user.id,
@@ -46,14 +43,11 @@ def dashboard():
 
 @vendor_bp.route('/menu')
 @login_required
+@vendor_access_required
 def menu():
     '''
     Vendor menu items management
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
-
     # Get all menu items for this vendor
     menu_items = list(mongo.db.menu_items.find({'vendor_id': current_user.id}))
 
@@ -64,14 +58,11 @@ def menu():
 
 @vendor_bp.route('/menu/add', methods=['GET', 'POST'])
 @login_required
+@vendor_access_required
 def add_menu_item():
     '''
     Add a new menu item
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied. Vendor account required.', 'error')
-        return redirect(url_for('customer.dashboard'))
-
     if request.method == 'POST':
         name = request.form.get('name')
         price = request.form.get('price')
@@ -111,14 +102,11 @@ def add_menu_item():
 
 @vendor_bp.route('/menu/<item_id>/delete', methods=['POST'])
 @login_required
+@vendor_access_required
 def delete_menu_item(item_id):
     '''
     Delete a menu item
     '''
-    if current_user.user_type != 'vendor':
-        flash('Access denied.', 'error')
-        return redirect(url_for('customer.dashboard'))
-
     try:
         # Verify ownership
         item = mongo.db.menu_items.find_one({

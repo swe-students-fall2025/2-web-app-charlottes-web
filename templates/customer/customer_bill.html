@@ -10,12 +10,22 @@
     {% if bill %}
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <h3 class="card-title h5">Group: {{ group.name }}</h3>
+            <div class="row align-items-center mb-3">
+                <div class="col-md-6">
+                    <h3 class="card-title h5 mb-0">Group: {{ group.name }}</h3>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="badge bg-{{ 'info' if bill.status == 'pending' else 'success' }}">
+                        {{ bill.status|upper }}
+                    </span>
+                </div>
+            </div>
+
             <p class="text-muted mb-1">
-                <strong>Bill ID:</strong> {{ bill._id }}
+                <strong>Table:</strong> {{ bill.table_number }}
             </p>
             <p class="text-muted mb-3">
-                <strong>Date Created:</strong> {{ bill.created_at or "Unknown" }}
+                <strong>Date:</strong> {{ bill.created_at.date() if bill.created_at else "Unknown" }}
             </p>
 
             <hr>
@@ -23,30 +33,48 @@
             <!-- Bill Items Table -->
             {% if bill.contents %}
             <div class="table-responsive">
-                <table class="table table-striped table-bordered align-middle">
+                <table class="table table-striped table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>Item</th>
-                            <th>Quantity</th>
-                            <th>Price</th>
-                            <th>Total</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end">Total</th>
                             <th>Assigned To</th>
+                            <th class="text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in bill.contents %}
                         <tr>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td>${{ "%.2f"|format(item.price) }}</td>
-                            <td>${{ "%.2f"|format(item.price * item.quantity) }}</td>
+                            <td><strong>{{ item.name }}</strong></td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">${{ "%.2f"|format(item.price) }}</td>
+                            <td class="text-end fw-bold">${{ "%.2f"|format(item.price * item.quantity) }}</td>
                             <td>
-                                {% if item.assigned_to %}
-                                {% for user_id in item.assigned_to %}
-                                <span class="badge bg-info text-dark">{{ user_id }}</span>
-                                {% endfor %}
+                                {% if item.assigned_to and item.assigned_to|length > 0 %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for user_id in item.assigned_to %}
+                                    {% set assigned_user = item.assigned_user_objects[loop.index0] if item.assigned_user_objects else None %}
+                                    <span class="badge bg-info text-dark">
+                                        {{ assigned_user.username if assigned_user else "Unknown" }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
                                 {% else %}
-                                <span class="text-muted">Unassigned</span>
+                                <span class="text-muted small">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <!-- Assign to current user button -->
+                                {% if not item.assigned_to or current_user.id not in item.assigned_to %}
+                                <form method="POST" action="{{ url_for('customer.split_bill', group_id=group._id, item_id=item._id, user_id=current_user.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-success" title="Assign to yourself">
+                                        <i class="fa fa-plus"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-success">You</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -55,7 +83,9 @@
                 </table>
             </div>
             {% else %}
-            <p class="text-center text-muted mt-3">No items in this bill yet.</p>
+            <p class="text-center text-muted mt-3">
+                <i class="fa fa-inbox"></i> No items in this bill yet.
+            </p>
             {% endif %}
         </div>
     </div>
@@ -65,18 +95,18 @@
         <h4 class="mb-3">Summary</h4>
         <p><strong>Total Items:</strong> {{ bill.contents|length }}</p>
         <p>
-            <strong>Estimated Total Cost:</strong> $
-            {{
-            "%.2f"|format(
-            bill.contents|sum(attribute='price', start=0)
-            if bill.contents else 0
-            )
-            }}
+            <strong>Bill Subtotal:</strong> ${{ "%.2f"|format(bill.subtotal) }}
+        </p>
+        <p>
+            <strong>Tax (8.875%):</strong> ${{ "%.2f"|format(bill.subtotal * 0.08875) }}
+        </p>
+        <p class="fw-bold text-success">
+            <strong>Bill Total:</strong> ${{ "%.2f"|format(bill.subtotal * 1.08875) }}
         </p>
     </div>
 
     <div class="text-center mb-4">
-        <a href="{{ url_for('customer.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        <a href="{{ url_for('customer.group_detail', group_id=group._id) }}" class="btn btn-secondary">Back to Group</a>
     </div>
 
     {% else %}
