@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from bson.objectid import ObjectId
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -18,12 +19,16 @@ class PaymentMethod:
     nickname: str
     token: str
     last_four: str
+    expiry_date: datetime
+    cardholder_name: str
 
     def to_dict(self):
         return {
             "nickname": self.nickname,
             "token": self.token,
             "last_four": self.last_four,
+            "expiry_date": self.expiry_date,
+            "cardholder_name": self.cardholder_name
         }
 
 
@@ -38,10 +43,16 @@ def dashboard():
     groups = mongo.db.groups.find({'members': current_user.id})
     groups_list = list(groups)
 
+    payment_methods = (
+        mongo.db.users.find_one({"_id": ObjectId(current_user.id)})
+        ["payment_methods"]
+    )
+
     return render_template('customer/dashboard.html',
                            title='My Groups',
                            groups=groups_list,
-                           user_id=current_user.id)
+                           user_id=current_user.id,
+                           payment_methods=payment_methods)
 
 
 @customer_bp.route('/group/create', methods=['GET', 'POST'])
@@ -327,7 +338,7 @@ def split_bill(group_id, item_id, user_id):
 
 
 
-@customer_bp.route('/add_payment', methods=['POST'])
+@customer_bp.route('/add_payment_method', methods=['POST'])
 @login_required
 @customer_access_required
 def add_payment_method():
@@ -344,12 +355,21 @@ def add_payment_method():
     new_card = PaymentMethod(
         nickname=request.form.get("nickname", "Untitled card"),
         token=card_token,
-        last_four=request.form["card_number"][-4:]
+        last_four=request.form["card_number"][-4:],
+        expiry_date=request.form["expiry_date"],
+        cardholder_name=request.form["cardholder_name"]
     )
 
     mongo.db.users.find_one_and_update(
-        {"_id": current_user.id},
+        {"_id": ObjectId(current_user.id)},
         {"$push": {"payment_methods": new_card.to_dict()}}
     )
 
     return redirect(url_for("customer.dashboard"))
+
+
+@customer_bp.route('/add_payment', methods=['GET'])
+@login_required
+@customer_access_required
+def add_payment_method_form():
+    return render_template("customer/add_payment_method.html")
