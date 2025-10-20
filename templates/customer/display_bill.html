@@ -50,5 +50,29 @@
             <h4><strong>Total:</strong> ${{ "%.2f"|format(bill.subtotal + (bill.subtotal * tax / 100)) }}</h4>
         </div>
     </div>
+    <h3 class="mt-5 mb-3">User Subtotals</h3>
+    <table class="table table-bordered fs-6">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>
+                    ${{ "%.2f"|format(subtotals.get(user._id|string, 0) * (1 + tax / 100)) }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2" class="text-center text-muted">No users in group.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
 </div>
 {% endblock %}
