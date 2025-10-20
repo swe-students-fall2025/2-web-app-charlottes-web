@@ -29,7 +29,8 @@
                         Table: {{ active_bill.table_number }}<br>
                         Status: <span class="badge bg-warning">{{ active_bill.status }}</span><br>
                         Total: ${{ "%.2f"|format(active_bill.subtotal * (1 + tax / 100)) }}
-                        <div><a href="{{ url_for('customer.display_bill', group_id=group._id) }}"
+                        <br><small class="text-danger">Paid: ${{ "%.2f"|format(active_bill.paid) }}</small>
+                        <div class="mt-1"><a href="{{ url_for('customer.display_bill', group_id=group._id) }}"
                                 class="btn btn-secondary">Split Bill</a></div>
                     </div>
                     {% else %}
@@ -60,9 +61,15 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="d-flex gap-2">
+                {% if active_bill %}
+                <div class="d-flex justify-content-center w-100">
+                    <a href="{{ url_for('customer_bills.pay_bill_menu', bill_id=active_bill._id) }}"
+                        class="w-100 px-10 btn btn-success">Pay Your Share
+                        (${{ "%.2f"|format(subtotal * (1 + tax / 100)) }})</a>
+                </div>
+                {% endif %}
+                <div class="d-flex mt-3 gap-2 justify-content-evenly">
                     <a href="{{ url_for('customer.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-
                     <form method="POST" action="{{ url_for('customer.leave_group', group_id=group._id) }}"
                         onsubmit="return confirm('Are you sure you want to leave this group?');" class="ms-auto">
                         <button type="submit" class="btn btn-danger">Leave Group</button>
@@ -80,7 +87,6 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    {% if not active_bill %}
                     <!-- Join Bill by Code -->
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Join a Bill</label>
@@ -94,7 +100,6 @@
                         <small class="text-muted d-block mt-1">Ask vendor for the payment code</small>
                     </div>
                     <hr>
-                    {% endif %}
                 </div>
             </div>
         </div>
