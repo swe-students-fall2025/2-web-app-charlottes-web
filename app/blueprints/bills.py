@@ -245,7 +245,7 @@ def join_by_code():
 
         flash(
             f'Group "{group["name"]}" joined Bill '
-            '(Code: {session_code}) successfully!',
+            f'(Code: {session_code}) successfully!',
             "success"
         )
         return redirect(url_for('customer.display_bill', group_id=group_id))
