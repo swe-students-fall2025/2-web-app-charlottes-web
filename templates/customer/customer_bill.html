@@ -55,7 +55,8 @@
                                 {% if item.assigned_to and item.assigned_to|length > 0 %}
                                 <div class="d-flex flex-wrap gap-1">
                                     {% for user_id in item.assigned_to %}
-                                    {% set assigned_user = item.assigned_user_objects[loop.index0] if item.assigned_user_objects else None %}
+                                    {% set assigned_user = item.assigned_user_objects[loop.index0] if
+                                    item.assigned_user_objects else None %}
                                     <span class="badge bg-info text-dark">
                                         {{ assigned_user.username if assigned_user else "Unknown" }}
                                     </span>
@@ -68,7 +69,9 @@
                             <td class="text-center">
                                 <!-- Assign to current user button -->
                                 {% if not item.assigned_to or current_user.id not in item.assigned_to %}
-                                <form method="POST" action="{{ url_for('customer.split_bill', group_id=group._id, item_id=item._id, user_id=current_user.id) }}" style="display:inline;">
+                                <form method="POST"
+                                    action="{{ url_for('customer.split_bill', group_id=group._id, item_id=item._id, user_id=current_user.id) }}"
+                                    style="display:inline;">
                                     <button type="submit" class="btn btn-sm btn-success" title="Assign to yourself">
                                         <i class="fa fa-plus"></i>
                                     </button>
@@ -98,10 +101,10 @@
             <strong>Bill Subtotal:</strong> ${{ "%.2f"|format(bill.subtotal) }}
         </p>
         <p>
-            <strong>Tax (8.875%):</strong> ${{ "%.2f"|format(bill.subtotal * 0.08875) }}
+            <strong>Tax ({{ "%.2f"|format(tax) }}%):</strong> ${{ "%.2f"|format(bill.subtotal * tax) }}
         </p>
         <p class="fw-bold text-success">
-            <strong>Bill Total:</strong> ${{ "%.2f"|format(bill.subtotal * 1.08875) }}
+            <strong>Bill Total:</strong> ${{ "%.2f"|format(bill.subtotal * (1 + tax)) }}
         </p>
     </div>
 

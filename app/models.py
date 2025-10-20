@@ -16,7 +16,7 @@ class User(UserMixin):
         self.password_hash = user_data.get('password_hash', '')
         self.user_type = user_data.get('user_type', 'customer')
         # self.phone = user_data.get('phone', '')
-        self.payment_method = user_data.get('payment_method', {})
+        self.payment_methods = user_data.get('payment_methods', [])
         self.vendor_name = user_data.get('vendor_name', '')
         # self.created_at = user_data.get('created_at', datetime.utcnow())
 
@@ -46,7 +46,7 @@ class User(UserMixin):
         }
 
         if user_type == 'customer':
-            user_dict['payment_method'] = kwargs.get('payment_method', {})
+            user_dict['payment_methods'] = kwargs.get('payment_methods', [])
         elif user_type == 'vendor':
             user_dict['vendor_name'] = kwargs.get('vendor_name', '')
 
