@@ -40,8 +40,12 @@
 
     <!-- Action buttons with Bootstrap -->
     <div class="d-grid gap-2 mb-4">
-        <a href="{{ url_for('customer.create_group') }}" class="btn btn-primary">Create New Group</a>
-        <a href="{{ url_for('customer.join_group') }}" class="btn btn-outline-secondary">Join Existing Group</a>
+        <a href="{{ url_for('customer.create_group') }}" class="btn btn-primary">
+            <i class="fa fa-users"></i> Create New Group
+        </a>
+        <a href="{{ url_for('customer.join_group') }}" class="btn btn-outline-secondary">
+            <i class="fa fa-plus"></i> Join Existing Group
+        </a>
     </div>
 
 </div>

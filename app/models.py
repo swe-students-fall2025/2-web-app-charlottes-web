@@ -56,6 +56,11 @@ class User(UserMixin):
 class Group:
     '''
     Group model
+
+    Relationships:
+    - group.creator_id → links to Customer (User with user_type='customer')
+    - group.members → list of Customer IDs (user_type='customer')
+    - group.active_bill_id → links to Bill (created by a vendor)
     '''
     def __init__(self, group_data):
         self.id = str(group_data.get('_id', ''))
@@ -74,11 +79,14 @@ class Group:
 class Bill:
     '''
     Bill model
+
+    Relationships:
+    - bill.vendor_id -> links to Vendor (User with user_type='vendor')
+    - Group.active_bill_id -> links to this Bill (uni-directional)
     '''
     def __init__(self, bill_data):
         self.id = str(bill_data.get('_id', ''))
         self.vendor_id = str(bill_data.get('vendor_id', ''))
-        self.group_id = str(bill_data.get('group_id', ''))
         self.table_number = str(bill_data.get('table_number', ''))
         self.contents = bill_data.get('contents', [])
         self.subtotal = bill_data.get('subtotal', 0.0)
