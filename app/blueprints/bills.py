@@ -287,6 +287,7 @@ def pay_bill_menu(bill_id):
         tax=TAX_RATE,
         subtotal=subtotal,
         bill_id=bill_id,
+        group_id=bill_group["_id"],
         payment_methods=payment_methods
     )
 
