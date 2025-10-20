@@ -6,7 +6,7 @@
 <div class="container" style="max-width: 600px;">
     <h2 class="mb-4">Choose Payment Method</h2>
 
-    <form method="POST" action="{{ url_for('customer.pay_bill', bill_id=bill_id)}}">
+    <form method="POST" action="{{ url_for('customer_bills.pay_bill', bill_id=bill_id)}}">
 
         <!-- Saved Payment Methods -->
         <div class="mb-3">
@@ -15,7 +15,14 @@
             {% for card in payment_methods %}
             <div class="form-check">
                 <input type="radio" name="payment_option" value="{{ card.token }}" class="form-check-input">
-                <label>Card ending in {{ card.last_four }} (Expiry: {{ card.expiry_date }})</label>
+                <label>
+                    {% if card.nickname %}
+                    {{ card.nickname }}
+                    {% else %}
+                    Unnamed card
+                    {% endif %} - Ending in {{ card.last_four }} (Expiry:
+                    {{ card.expiry_date }})
+                </label>
             </div>
             {% endfor %}
             <div class="form-check">
@@ -25,7 +32,12 @@
                 </label>
             </div>
         </div>
-
+        <!-- CVC input -->
+        <div id="cvcForm" class="mb-3" hidden>
+            <label for="cvc-input" class="form-label">CVC:</label>
+            <input type="text" class="form-control w-25" id="cvc-input" name="cvc-input" inputmode="numeric"
+                maxlength="3" minlength="3">
+        </div>
         <!-- New Payment Method Form -->
         <div id="newCardForm" class="border rounded p-3 mb-3" style="display: none;">
             <h5 class="mb-3">Enter New Card</h5>
@@ -50,7 +62,7 @@
             <div class="mb-3">
                 <label for="cvc" class="form-label">CVC</label>
                 <input type="text" class="new-payment form-control" id="cvc" name="cvc" inputmode="numeric"
-                    maxlength="3">
+                    maxlength="3" minlength="3">
                 <small class="form-text text-muted">3 digit number on your card</small>
             </div>
         </div>
@@ -63,14 +75,20 @@
     const newCardRadio = document.getElementById('newCard');
     const newCardForm = document.getElementById('newCardForm');
     const submit = document.getElementById('submitButton')
+    const cvcForm = document.getElementById('cvcForm')
+    const cvcInput = document.getElementById('cvc-input')
     document.querySelectorAll('input[name="payment_option"]').forEach((radio) => {
         radio.addEventListener('change', () => {
             if (newCardRadio.checked) {
                 newCardForm.style.display = 'block';
                 document.querySelectorAll('.new-payment').forEach((input) => { input.required = true })
+                cvcForm.hidden = true;
+                cvcInput.required = false;
             } else {
                 newCardForm.style.display = 'none';
                 document.querySelectorAll('.new-payment').forEach((input) => { input.required = false })
+                cvcForm.hidden = false;
+                cvcInput.required = true;
             }
             submit.disabled = false;
         });

@@ -60,11 +60,13 @@
                 </div>
 
                 <!-- Actions -->
+                {% if active_bill %}
                 <div class="d-flex justify-content-center w-100">
-                    <a href="{{ url_for('customer.pay_bill_menu', bill_id=active_bill._id) }}"
+                    <a href="{{ url_for('customer_bills.pay_bill_menu', bill_id=active_bill._id) }}"
                         class="w-100 px-10 btn btn-success">Pay Your Share
-                        ($xx.xx)</a>
+                        (${{ "%.2f"|format(subtotal * (1 + tax / 100)) }})</a>
                 </div>
+                {% endif %}
                 <div class="d-flex mt-3 gap-2 justify-content-evenly">
                     <a href="{{ url_for('customer.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
                     <form method="POST" action="{{ url_for('customer.leave_group', group_id=group._id) }}"
