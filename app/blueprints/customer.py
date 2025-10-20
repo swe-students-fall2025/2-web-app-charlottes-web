@@ -251,3 +251,50 @@ def display_bill(group_id):
         items=items,
         group_members=group_members
     )
+
+@customer_bp.route('/bill/split/<group_id>/<item_id>/<user_id>', methods=['POST'])
+@login_required
+def split_bill(group_id, item_id, user_id):
+    '''
+    Adds an additional member into the "assigned_to" list of the item inside the bill
+    '''
+    if current_user.user_type != 'customer':
+        flash('Access denied. Customer account required.', 'error')
+        return redirect(url_for('vendor.dashboard'))
+    
+    if current_user.id not in group.get("members", []):
+        flash("You are not a member of this group.", "error")
+        return redirect(url_for("customer.dashboard"))
+
+    if user_id not in group.get("members", []):
+        flash("Target user is not a member of this group.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
+    group = mongo.db.groups.find_one({"_id" : ObjectId(group_id)})
+    if not group:
+        flash("Group not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
+    bill = mongo.db.bills.find_one({"_id": ObjectId(group.get("active_bill_id"))})
+    if not bill:
+        flash("Bill not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+    
+    target_item = None
+    for content in bill.get("contents"):
+        if content.get("_id") == item_id:
+            target_item = content
+    if not target_item:
+        flash("Target item not found.", "error")
+        return redirect(url_for("customer.dashboard"))
+
+    if user_id not in target_item["assigned_to"]:
+        mongo.db.bills.update_one({
+            {"_id": ObjectId(group.get("active_bill_id")), "contents._id": target_item.get('_id', "") },
+            {
+                "$push": {"assigned_to" : user_id }
+            }
+        })
+    
+    return redirect(url_for("customer.display_bill", group_id=group_id))
+
