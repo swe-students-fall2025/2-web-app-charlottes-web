@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Split Bill{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Split Item: {{ item.name }}</h2>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p><strong>Price:</strong> ${{ "%.2f"|format(item.price) }}</p>
+            <p><strong>Quantity:</strong> {{ item.quantity }}</p>
+            <p><strong>Current Assignees:</strong>
+                {% if item.assigned_to %}
+                {% for user in assigned_users %}
+                <span class="badge bg-info text-dark">{{ user.username }}</span>
+                {% endfor %}
+                {% else %}
+                <em>No members assigned yet.</em>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <form method="POST"
+        action="{{ url_for('customer.split_bill', bill_id=bill._id, item_id=item._id, group_id=group._id) }}">
+        <div class="mb-3">
+            <h4>Select Members to Split:</h4>
+            <div class="row">
+                {% for member in members %}
+                <div class="col-md-4 mb-2">
+                    <div class="form-check border rounded p-2">
+                        <input class="form-check-input" type="checkbox" name="user_ids" id="member{{ loop.index }}"
+                            value="{{ member._id }}" {% if member._id|string in (item.assigned_to or []) %}checked{%
+                            endif %}>
+                        <label class="form-check-label" for="member{{ loop.index }}">
+                            {{ member.username }}
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Confirm Split</button>
+        <a href="{{ url_for('customer.display_bill', group_id=group._id) }}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

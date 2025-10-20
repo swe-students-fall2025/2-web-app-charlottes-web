@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Split Bill{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card p-4 mb-5">
+        <h2 class="text-center mb-3">Table {{ bill.table_number }}</h2>
+        <p><strong>Date:</strong> {{ bill.created_at.date()}}</p>
+        <p><strong>Payment Code:</strong> {{ bill.session_code }}</p>
+        <hr>
+
+        <h3 class="mt-4 mb-3">Items Ordered</h3>
+        <table class="table table-striped fs-6" style="table-layout: fixed;">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                    <!-- <th></th> -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in bill.contents %}
+                <tr>
+                    <td class="align-content-center">{{ item.name }}</td>
+                    <td class="align-content-center">{{ item.quantity }}</td>
+                    <td class="align-content-center">${{ "%.2f"|format(item.price) }}</td>
+                    <td class="w-50 align-content-center">${{ "%.2f"|format(item.price * item.quantity) }}</td>
+                    <td class="d-flex align-content-center justify-content-end">
+                        <a href="{{ url_for('customer.show_split_interface', bill_id=bill._id, item_id=item._id, group_id=group._id) }}"
+                            class="btn btn-secondary">
+                            Split Item
+                        </a>
+
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No items found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="text-end mt-4">
+            <p><strong>Subtotal:</strong> ${{ "%.2f"|format(bill.subtotal) }}</p>
+            <p><strong>Tax ({{ "%.2f"|format(tax) }}%):</strong> ${{ "%.2f"|format(bill.subtotal * tax / 100) }}</p>
+            <h4><strong>Total:</strong> ${{ "%.2f"|format(bill.subtotal + (bill.subtotal * tax / 100)) }}</h4>
+        </div>
+    </div>
+</div>
+{% endblock %}
