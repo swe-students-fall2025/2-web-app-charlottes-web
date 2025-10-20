@@ -30,7 +30,6 @@ class OrderItem:
     quantity: int
     bill_id: str
     assigned_to: list = field(default_factory=list)
-    split_type: str = "equal"
     _id: uuid = field(default_factory=lambda: str(uuid.uuid4()))
 
     def to_dict(self):
@@ -42,7 +41,6 @@ class OrderItem:
             "quantity": self.quantity,
             "bill_id": self.bill_id,
             "assigned_to": self.assigned_to or [],
-            "split_type": self.split_type
         }
 
 
