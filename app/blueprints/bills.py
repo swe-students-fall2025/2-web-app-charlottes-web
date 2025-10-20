@@ -59,9 +59,9 @@ def create_bill():
                 "vendor_id": current_user.id,
                 "table_number": request.form.get("table_number"),
                 "contents": [],
-                "subtotal": 0,
+                "subtotal": 0.0,
                 "status": "pending",
-                "paid": 0,
+                "paid": 0.0,
                 "session_code": generate_code(),
                 "created_at": datetime.now(pytz.timezone("US/Eastern"))
             }
@@ -277,11 +277,7 @@ def pay_bill_menu(bill_id):
     bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
     subtotal = 0
     for item in bill["contents"]:
-        if not item["assigned_to"]:
-            subtotal += (
-                item["price"] * item["quantity"] / len(bill_group["members"])
-            )
-        elif current_user.id in item["assigned_to"]:
+        if current_user.id in item["assigned_to"]:
             subtotal += (
                 item["price"] * item["quantity"] / len(item["assigned_to"])
             )
@@ -303,6 +299,22 @@ def pay_bill(bill_id):
     Pay a bill
     '''
 
+    bill_group = mongo.db.groups.find_one(
+        {'active_bill_id': ObjectId(bill_id)}
+    )
+    if not bill_group or current_user.id not in bill_group["members"]:
+        flash("No active bill found", "error")
+        return redirect(url_for('customer.dashboard'))
+
+    bill = mongo.db.bills.find_one({"_id": ObjectId(bill_id)})
+    subtotal = 0
+    for item in bill["contents"]:
+        if current_user.id in item["assigned_to"]:
+            subtotal += (
+                item["price"] * item["quantity"] / len(item["assigned_to"])
+            )
+    subtotal *= 1 + TAX_RATE / 100
+
     try:
         selection = request.form.get("payment_option")
         if selection == "new":
@@ -311,10 +323,26 @@ def pay_bill(bill_id):
                 "expiry_date": request.form["expiry_date"],
                 "cardholder_name": request.form["cardholder_name"]
             }
-            demo_payment_provider.make_payment(card, request.form["cvc"])
+            paid = demo_payment_provider.make_payment(
+                card, request.form["cvc"], subtotal
+            )
         else:
             card = selection
-            demo_payment_provider.make_payment(card, request.form["cvc-input"])
+            paid = demo_payment_provider.make_payment(
+                card, request.form["cvc-input"], subtotal
+            )
+
+        bill = mongo.db.bills.find_one_and_update(
+            {"_id": ObjectId(bill_id)}, {"$inc": {"paid": paid}},
+            return_document=ReturnDocument.AFTER
+        )
+
+        if bill["paid"] >= bill["subtotal"] * (1 + TAX_RATE / 100):
+            mongo.db.bills.delete_one({"_id": ObjectId(bill_id)})
+            mongo.db.groups.find_one_and_update(
+                {'active_bill_id': ObjectId(bill_id)},
+                {"$set": {"active_bill_id": None}}
+            )
 
         flash("Payment successful!", "success")
         return redirect(url_for('customer.dashboard'))

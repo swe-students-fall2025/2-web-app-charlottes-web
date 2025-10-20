@@ -180,12 +180,7 @@ def group_detail(group_id):
         )
         if active_bill:
             for item in active_bill["contents"]:
-                if not item["assigned_to"]:
-                    subtotal += (
-                        item["price"] * item["quantity"]
-                        / len(members)
-                    )
-                elif current_user.id in item["assigned_to"]:
+                if current_user.id in item["assigned_to"]:
                     subtotal += (
                         item["price"] * item["quantity"]
                         / len(item["assigned_to"])

@@ -66,7 +66,7 @@ class PaymentProvider:
         '''
         self.card_network.delete_token(token)
 
-    def make_payment(self, card, cvc):
+    def make_payment(self, card, cvc, amount):
         '''
         Make a payment with a card
         '''
@@ -78,7 +78,7 @@ class PaymentProvider:
 
         try:
             self.card_network.validate_card(card, cvc)
-            self.card_network.make_payment(card, cvc)
+            return self.card_network.make_payment(card, cvc, amount)
         except PaymentError:
             raise
 
@@ -136,7 +136,7 @@ class CardNetwork:
             except PaymentError:
                 raise
 
-    def make_payment(self, card, cvc):
+    def make_payment(self, card, cvc, amount):
         '''
         Simulated function call to make a payment
         This would be done at the bank level but is simulated here
@@ -146,7 +146,7 @@ class CardNetwork:
             card = mongo.db.cards.find_one({"token": card})
             if not card:
                 raise PaymentError("Card not found")
-            card["card_number"] = fernet.decode(card["card_number"]).decode()
+            card["card_number"] = fernet.decrypt(card["card_number"]).decode()
             if len(card["card_number"]) != 16:
                 raise PaymentError("Invalid card number")
 
@@ -155,6 +155,8 @@ class CardNetwork:
             self.check_expiry(card["expiry_date"])
         except PaymentError:
             raise
+
+        return amount
 
 
 demo_card_network = CardNetwork()
