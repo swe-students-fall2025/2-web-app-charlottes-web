@@ -312,7 +312,6 @@ def display_bill(group_id):
     
     users = []
     for userid in group.get("members", []):
-        print("TEST123",userid)
         users.append(mongo.db.users.find_one({"_id" : ObjectId(userid)}))
     
     # display subtotals
@@ -322,7 +321,6 @@ def display_bill(group_id):
     for item in bill.get("contents"):
         for userid in item.get('assigned_to'):
             subtotals[userid] += round(float( (item.get('price')*item.get('quantity'))/len(item.get('assigned_to'))), 2)
-    print("TEST123", subtotals)
     return render_template("customer/display_bill.html", bill=bill, tax=TAX_RATE, group=group, subtotals=subtotals, users=users)
 
 @customer_bp.route('/bill/split_interface/<group_id>/<bill_id>/<item_id>', methods=['GET'])
